@@ -1,0 +1,44 @@
+{
+  "matched": {
+    "job_id": "demo_001",
+    "fee_rule": "incoming_wire",
+    "bank_rows": [
+      {
+        "row_id": "row_003",
+        "date": "2026-05-20",
+        "description": "Incoming wire INV-2026-0412 Pacific Retail",
+        "credit_amount": 421.5,
+        "debit_amount": null,
+        "currency": "MYR"
+      }
+    ]
+  },
+  "needs_review": {
+    "job_id": "demo_needs_review_001",
+    "fee_rule": "incoming_wire",
+    "bank_rows": [
+      {
+        "row_id": "row_review_001",
+        "date": "2026-05-20",
+        "description": "Incoming wire INV-2026-0412 Pacific Retail",
+        "credit_amount": 418.0,
+        "debit_amount": null,
+        "currency": "MYR"
+      }
+    ]
+  },
+  "unmatched": {
+    "job_id": "demo_unmatched_001",
+    "fee_rule": "incoming_wire",
+    "bank_rows": [
+      {
+        "row_id": "row_unmatched_001",
+        "date": "2026-05-27",
+        "description": "Incoming transfer unrelated settlement",
+        "credit_amount": 376.25,
+        "debit_amount": null,
+        "currency": "MYR"
+      }
+    ]
+  }
+}

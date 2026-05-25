@@ -44,7 +44,7 @@ Immediate branch work:
 | Member | In Progress Next | Expected Handoff |
 |---|---|---|
 | Hemdan | Provider/orchestration integration and API stability review | Approve contract-sensitive PRs and verify routes after merge |
-| Tawila | Three deterministic demo outcomes plus pytest proof | Stable case URLs, calculation traces, and generated artifacts |
+| Tawila | Three deterministic demo outcomes plus pytest proof | `/api/demo?case=...`, calculation traces, and generated artifacts |
 | Youssef | Demo-case switcher after Tawila merges | UI showing matched, needs review, and unmatched results |
 | Shafey | Submission deck, script, screenshots, and QA | Verified demo narrative and final delivery assets |
 
@@ -78,7 +78,7 @@ Endpoint ownership:
 | Endpoint | Owner | Contract |
 |---|---|---|
 | `GET /api/health` | Hemdan | Service readiness response |
-| `GET /api/demo` | Hemdan + Tawila | `ReconciliationResult` from committed demo data |
+| `GET /api/demo?case=matched\|needs_review\|unmatched` | Hemdan + Tawila | `ReconciliationResult`; omitted `case` defaults to `matched` |
 | `POST /api/reconcile` | Hemdan + Tawila | `ReconciliationResult` from supplied or fallback data |
 | `GET /api/report/{job_id}` | Tawila | PDF artifact |
 | `GET /api/export/{job_id}` | Tawila | CSV audit artifact |
@@ -103,6 +103,7 @@ Checkpoint 2:
 
 Checkpoint 3:
 - matcher integrated
+- named matched, needs-review, and unmatched cases covered by pytest
 
 Checkpoint 4:
 - PDF/export generation works

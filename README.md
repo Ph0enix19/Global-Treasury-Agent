@@ -125,6 +125,7 @@ treasury_hackathon/
 |   |   |-- routers/{health,demo,reconcile,report}.py
 |   |   |-- services/
 |   |   `-- utils/
+|   |-- tests/
 |   |-- requirements.txt
 |   `-- .env.example
 |-- frontend/
@@ -186,6 +187,14 @@ uvicorn app.main:app --reload --port 8000
 
 Open API documentation at `http://localhost:8000/docs`.
 
+Backend verification:
+
+```bash
+cd backend
+source .venv/bin/activate
+pytest
+```
+
 ## Frontend Run Commands
 
 In a second terminal:
@@ -209,7 +218,8 @@ docker compose up
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/api/health` | Backend status and active mode |
-| GET | `/api/demo` | Run the offline golden-path reconciliation |
+| GET | `/api/demo` | Run the offline matched golden-path reconciliation |
+| GET | `/api/demo?case=matched\|needs_review\|unmatched` | Run a named deterministic demo outcome |
 | POST | `/api/reconcile` | Reconcile optional structured inputs or default fixtures |
 | GET | `/api/report/{job_id}` | Download the generated PDF report |
 | GET | `/api/export/{job_id}` | Download the generated CSV audit log |
@@ -235,6 +245,14 @@ docker compose up
 The `ReconciliationResult` shape is frozen for parallel development. Hemdan approves
 any contract change before another branch depends on it.
 
+Named demo calls:
+
+```bash
+curl http://localhost:8000/api/demo?case=matched
+curl http://localhost:8000/api/demo?case=needs_review
+curl http://localhost:8000/api/demo?case=unmatched
+```
+
 Structured POST example:
 
 ```bash
@@ -251,6 +269,7 @@ curl -X POST http://localhost:8000/api/reconcile \
 4. The incoming-wire rule applies `1.5% + MYR 5.00`, yielding `MYR 421.50`.
 5. Row `row_003` in the bank statement credits `MYR 421.50`, producing a match.
 6. Download the PDF report and audit CSV directly from the result panel.
+7. Use `?case=needs_review` and `?case=unmatched` for exception-handling scenes.
 
 ## Fallback Strategy
 
@@ -259,6 +278,7 @@ The demo does not rely on an external network or an API key:
 - `fallback_extracted_invoice.json` replaces unavailable invoice extraction.
 - `fallback_extracted_payment.json` replaces unavailable payment proof extraction.
 - `fallback_fx_rates.json` replaces unavailable live dated FX lookup.
+- `demo_cases.json` supplies deterministic matched, needs-review, and unmatched scenarios.
 - `demo_results.json` is an emergency complete response if the pipeline fails.
 - PDF generation has a basic built-in output path if ReportLab is unavailable.
 
@@ -276,9 +296,10 @@ adapters can be connected later without changing the API contract.
 ## Integration Checklist
 
 - Confirm `GET /api/health` returns `status: ok`.
-- Confirm `GET /api/demo` renders in the React dashboard.
+- Confirm `GET /api/demo` and each named `case` return the expected deterministic status.
 - Confirm `POST /api/reconcile` returns the same field structure as demo.
 - Confirm PDF and CSV links download generated artifacts.
+- Confirm `pytest` passes before merging backend changes.
 - Record the final demo in `DEMO_MODE=true` after the above checks pass.
 
 ## Start Here Today
