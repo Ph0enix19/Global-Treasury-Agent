@@ -31,4 +31,4 @@ def demo_result(
             status_code=400,
             detail=f"Unsupported demo case '{case}'. Supported cases: {supported}.",
         )
-    return run_reconciliation(_load_demo_request(case))
+    return run_reconciliation(_load_demo_request(case), allow_emergency_fallback=True)

@@ -1,11 +1,10 @@
 """Shared reconciliation pipeline and POST API route."""
 
-import csv
 import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import (
     BankStatementRow,
@@ -15,6 +14,7 @@ from app.models.schemas import (
     ReconciliationResult,
 )
 from app.services.audit_exporter import export_audit_log
+from app.services.bank_statement_parser import parse_bank_statement
 from app.services.chutes_agent import generate_explanation
 from app.services.fee_engine import apply_bank_fees
 from app.services.fx_service import fetch_fx_rate
@@ -29,19 +29,12 @@ DEMO_DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "demo"
 JOB_STORE: Dict[str, ReconciliationResult] = {}
 
 
+class ReconciliationInputError(ValueError):
+    """Raised when supplied financial inputs cannot be calculated safely."""
+
+
 def _load_bank_rows() -> List[BankStatementRow]:
-    with (DEMO_DATA_DIR / "sample_bank_statement.csv").open("r", encoding="utf-8") as bank_file:
-        return [
-            BankStatementRow(
-                row_id=row["row_id"],
-                date=row["date"],
-                description=row["description"],
-                credit_amount=float(row["credit_amount"]),
-                debit_amount=float(row["debit_amount"]) if row["debit_amount"] else None,
-                currency=row["currency"],
-            )
-            for row in csv.DictReader(bank_file)
-        ]
+    return parse_bank_statement(DEMO_DATA_DIR / "sample_bank_statement.csv")
 
 
 def _emergency_result(job_id: str) -> ReconciliationResult:
@@ -60,8 +53,16 @@ def _store_artifacts(result: ReconciliationResult) -> None:
     JOB_STORE[result.job_id] = result
 
 
+def _contains_supplied_data(payload: ReconcileRequest) -> bool:
+    return any(
+        (payload.invoice is not None, payload.payment is not None, payload.bank_rows is not None)
+    )
+
+
 def run_reconciliation(
-    request: Optional[ReconcileRequest] = None, job_id: Optional[str] = None
+    request: Optional[ReconcileRequest] = None,
+    job_id: Optional[str] = None,
+    allow_emergency_fallback: bool = False,
 ) -> ReconciliationResult:
     """Execute the deterministic MVP pipeline using caller data or demo fixtures."""
 
@@ -104,7 +105,11 @@ def run_reconciliation(
             explanation=generate_explanation(invoice, match),
             warnings=collect_input_warnings(invoice, payment),
         )
-    except Exception:
+    except Exception as exc:
+        if _contains_supplied_data(payload) and not allow_emergency_fallback:
+            raise ReconciliationInputError(
+                f"Unable to safely reconcile supplied inputs: {exc}"
+            ) from exc
         result = _emergency_result(resolved_job_id)
     _store_artifacts(result)
     return result
@@ -116,4 +121,7 @@ def find_result(job_id: str) -> Optional[ReconciliationResult]:
 
 @router.post("", response_model=ReconciliationResult)
 def reconcile(request: Optional[ReconcileRequest] = None) -> ReconciliationResult:
-    return run_reconciliation(request)
+    try:
+        return run_reconciliation(request)
+    except ReconciliationInputError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc

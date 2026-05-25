@@ -36,6 +36,7 @@ Baseline complete on `main`:
 - FastAPI boots locally with health, demo, reconcile, PDF report, and CSV export routes.
 - The shared `ReconciliationResult` contract and deterministic FX/fee/matcher path work.
 - Demo fixtures and fallback mode run without Morpheus, Chutes, or FX network access.
+- Named matched, needs-review, and unmatched cases with focused backend tests are merged.
 - The React dashboard consumes `/api/demo` and exposes PDF/CSV download actions.
 - README setup instructions and the architecture diagram are committed.
 
@@ -44,8 +45,8 @@ Immediate branch work:
 | Member | In Progress Next | Expected Handoff |
 |---|---|---|
 | Hemdan | Provider/orchestration integration and API stability review | Approve contract-sensitive PRs and verify routes after merge |
-| Tawila | Three deterministic demo outcomes plus pytest proof | `/api/demo?case=...`, calculation traces, and generated artifacts |
-| Youssef | Demo-case switcher after Tawila merges | UI showing matched, needs review, and unmatched results |
+| Tawila | CSV/XLSX bank-export parser plus live dated FX fallback | Typed rows, explicit FX traces, and no fake result substitution for real inputs |
+| Youssef | Demo-case switcher using merged case endpoints | UI showing matched, needs review, and unmatched results |
 | Shafey | Submission deck, script, screenshots, and QA | Verified demo narrative and final delivery assets |
 
 ## API Contract Ownership
@@ -88,7 +89,7 @@ Endpoint ownership:
 | Member | Immediate Responsibility | Handoff |
 |---|---|---|
 | Hemdan | Freeze schemas and keep application bootable | API contract and endpoint smoke results |
-| Tawila | Keep all money math deterministic and traceable | Demo fixtures, matching tests, artifacts |
+| Tawila | Keep all money math deterministic and normalize real bank rows | Parser, FX fallback, matching tests, artifacts |
 | Youssef | Make demo response legible and presentation-ready | Working UI and report/download actions |
 | Shafey | Keep delivery materials accurate and tested | Deck, screenshots, timed demo script |
 
@@ -107,6 +108,7 @@ Checkpoint 3:
 
 Checkpoint 4:
 - PDF/export generation works
+- bank CSV/XLSX export parsing and live-FX fallback covered by pytest
 
 Checkpoint 5:
 - final demo walkthrough stable
@@ -121,9 +123,9 @@ Checkpoint 5:
 
 Merge order for the submission path:
 
-1. Tawila: deterministic cases, artifact reliability, and tests.
-2. Youssef: frontend case selector against the unchanged result contract.
-3. Hemdan: provider/orchestration additions only if the fallback path remains stable.
+1. Tawila: real bank-export parsing and live-FX fallback after merged case support.
+2. Youssef: frontend case selector against the already merged result contract.
+3. Hemdan: upload/provider orchestration only if the fallback path remains stable.
 4. Shafey: final screenshots, demo script, and documentation polish.
 
 ## Pull Strategy
@@ -155,15 +157,15 @@ Each teammate runs only the command for their assigned branch.
 ## Start Here Today
 
 - Hemdan: pull `main`, create `backend/extraction`, keep `ReconciliationResult` stable, and review backend PRs.
-- Tawila: pull `main`, create `backend/matching`, add `matched`, `needs_review`, and `unmatched` deterministic cases with pytest coverage.
-- Youssef: pull `main`, create `frontend/dashboard`, preserve current rendering and prepare the case-selector UI against Tawila's merged URLs.
-- Shafey: pull `main`, create `demo/docs`, prepare slides/script now and capture screenshots after named cases merge.
+- Tawila: continue Role 2 work on `backend/matching-real-data`, delivering CSV/XLSX normalization and live FX fallback without changing response fields.
+- Youssef: pull `main`, create `frontend/dashboard`, and implement the case-selector UI against the merged named-case URLs.
+- Shafey: pull `main`, create `demo/docs`, prepare slides/script and capture matched and needs-review screenshots.
 - Team: merge only when demo mode works without API keys.
 
 ## Immediate Delivery Sequence
 
-1. Everyone pulls this handoff baseline from `main` and creates only their owned branch.
-2. Tawila delivers deterministic case hardening and tests through a pull request.
-3. Youssef consumes the named case endpoint in the dashboard after that merge.
-4. Hemdan integrates Morpheus/Chutes work while keeping all monetary calculations in code.
+1. Everyone pulls current `main`; named demo cases are already available there.
+2. Tawila delivers bank export parsing and live-FX fallback through a reviewed pull request.
+3. Youssef consumes the merged named case endpoints in the dashboard in parallel.
+4. Hemdan integrates file upload/Morpheus/Chutes orchestration while keeping all monetary calculations in code.
 5. Shafey captures the verified matched and needs-review workflow for submission.
