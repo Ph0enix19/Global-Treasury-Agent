@@ -200,6 +200,40 @@ def test_parser_rejects_incomplete_csv_statements(tmp_path, content: str, messag
         parse_bank_statement(statement)
 
 
+def test_upload_accepts_files_parses_statement_and_stores_result(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "true")
+    with (FIXTURE_DIR / "bank_statement_export.csv").open("rb") as statement:
+        response = client.post(
+            "/api/upload",
+            files={
+                "invoice": ("invoice.pdf", b"%PDF-1.4\ninvoice fixture", "application/pdf"),
+                "payment_proof": (
+                    "payment.png",
+                    b"\x89PNG\r\npayment fixture",
+                    "image/png",
+                ),
+                "bank_statement": (
+                    "bank_statement.csv",
+                    statement,
+                    "text/csv",
+                ),
+            },
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert set(payload) == RESULT_FIELDS
+    assert payload["job_id"].startswith("upload_")
+    assert payload["status"] == "matched"
+    assert payload["best_match"]["row_id"] == "uploaded_001"
+
+    stored = client.post("/api/reconcile", json={"job_id": payload["job_id"]})
+
+    assert stored.status_code == 200
+    assert stored.json()["job_id"] == payload["job_id"]
+    assert stored.json()["best_match"]["row_id"] == "uploaded_001"
+
+
 def test_supplied_rows_do_not_fall_back_to_fake_demo_results(monkeypatch) -> None:
     monkeypatch.setenv("DEMO_MODE", "true")
     response = client.post(

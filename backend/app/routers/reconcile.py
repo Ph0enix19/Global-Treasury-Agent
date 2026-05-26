@@ -68,6 +68,13 @@ def run_reconciliation(
 
     payload = request or ReconcileRequest()
     resolved_job_id = job_id or payload.job_id or "job_reconcile_001"
+    if (
+        request is not None
+        and payload.job_id
+        and not _contains_supplied_data(payload)
+        and payload.job_id in JOB_STORE
+    ):
+        return JOB_STORE[payload.job_id]
     try:
         extractor = MorpheusExtractor()
         invoice: InvoiceData = payload.invoice or extractor.extract_invoice()

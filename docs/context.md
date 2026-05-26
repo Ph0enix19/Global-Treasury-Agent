@@ -40,6 +40,40 @@ Baseline complete on `main`:
 - The React dashboard consumes `/api/demo` and exposes PDF/CSV download actions.
 - README setup instructions and the architecture diagram are committed.
 
+Role 1 update on `backend/hemdan`:
+- `POST /api/upload` accepts multipart `invoice`, `payment_proof`, and `bank_statement`.
+- Uploaded files are saved under ignored runtime job folders in `data/uploads/`.
+- Bank CSV/XLSX rows are parsed through `parse_bank_statement(path)`.
+- Invoice and payment proof extraction goes through `MorpheusExtractor`; `DEMO_MODE=true`
+  and provider failures preserve local fallback extraction.
+- Uploaded data is submitted as a `ReconcileRequest` to the existing deterministic
+  `run_reconciliation` pipeline, preserving the frozen `ReconciliationResult` shape.
+- The frontend-compatible handoff is supported: `/api/upload` stores the upload result,
+  and `/api/reconcile` returns that stored result when called with only the upload
+  `job_id`.
+- Provider env placeholders are documented without secrets:
+  `MORPHEUS_BASE_URL`, `MORPHEUS_MODEL`, `MORPHEUS_FAST_MODEL`, `CHUTES_BASE_URL`,
+  `CHUTES_MODEL`, and `CHUTES_REASONING_MODEL`.
+
+Role 1 local verification on `backend/hemdan`:
+- Backend dependencies were installed into `backend/.venv`; `backend/.env` was not
+  printed or committed.
+- Backend tests passed with the repo-local pytest temp directory:
+  `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .tmp\pytest`
+  returned `21 passed`.
+- FastAPI was started locally with uvicorn and smoke-tested successfully:
+  `/api/health` returned `ok`, `/api/demo?case=matched` returned `matched`, and
+  multipart `/api/upload` returned a matched upload result.
+- The frontend-compatible upload handoff was smoke-tested: posting the upload `job_id`
+  back to `/api/reconcile` returned the stored upload reconciliation.
+- Frontend dependencies were installed locally and `npm run build` completed
+  successfully.
+- `docker-compose.yml` was checked with `docker compose config`; the frontend env var
+  was corrected to `VITE_API_URL` so it matches `frontend/src/lib/api.js`.
+- Recommendation for day-to-day work: use the local venv and npm workflow for speed;
+  use Docker Compose when a clean teammate/demo environment is more important than
+  fast iteration.
+
 Immediate branch work:
 
 | Member | In Progress Next | Expected Handoff |
@@ -56,7 +90,8 @@ contract changes before merge. Tawila implements deterministic values within tha
 Youssef consumes the contract and must not create alternate result field names. Shafey
 documents only behavior confirmed against demo mode.
 
-Both `GET /api/demo` and `POST /api/reconcile` return one `ReconciliationResult` shape:
+`GET /api/demo`, `POST /api/upload`, and `POST /api/reconcile` return one
+`ReconciliationResult` shape:
 
 ```json
 {
@@ -80,6 +115,7 @@ Endpoint ownership:
 |---|---|---|
 | `GET /api/health` | Hemdan | Service readiness response |
 | `GET /api/demo?case=matched\|needs_review\|unmatched` | Hemdan + Tawila | `ReconciliationResult`; omitted `case` defaults to `matched` |
+| `POST /api/upload` | Hemdan | Multipart upload orchestration returning/storing `ReconciliationResult` |
 | `POST /api/reconcile` | Hemdan + Tawila | `ReconciliationResult` from supplied or fallback data |
 | `GET /api/report/{job_id}` | Tawila | PDF artifact |
 | `GET /api/export/{job_id}` | Tawila | CSV audit artifact |

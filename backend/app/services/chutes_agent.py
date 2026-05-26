@@ -10,6 +10,9 @@ class ChutesAgent:
 
     def __init__(self) -> None:
         self.api_key = os.getenv("CHUTES_API_KEY", "")
+        self.base_url = (os.getenv("CHUTES_BASE_URL") or "https://llm.chutes.ai/v1").rstrip("/")
+        self.model = os.getenv("CHUTES_MODEL") or "Qwen/Qwen3-32B-TEE"
+        self.reasoning_model = os.getenv("CHUTES_REASONING_MODEL") or "zai-org/GLM-5.1-TEE"
         self.fallback_mode = os.getenv("DEMO_MODE", "true").lower() != "false" or not self.api_key
 
     def explain_reconciliation(self, invoice: InvoiceData, match: MatchResult) -> str:

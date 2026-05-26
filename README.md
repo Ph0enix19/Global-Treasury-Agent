@@ -68,6 +68,7 @@ locked API contract.
 The shared `main` baseline already includes:
 
 - FastAPI health, demo, reconciliation, PDF report, and CSV audit endpoints.
+- Multipart upload orchestration for invoice, payment proof, and bank statement files.
 - Deterministic USD/MYR FX conversion, fee calculation, and transaction scoring.
 - Local extraction, FX, and complete-result fallback fixtures for offline demo mode.
 - Named `matched`, `needs_review`, and `unmatched` demo cases with pytest coverage.
@@ -178,6 +179,12 @@ reached, the response FX trace records use of the local dated fallback:
 
 ```bash
 DEMO_MODE=false
+MORPHEUS_BASE_URL=https://api.mor.org/api/v1
+MORPHEUS_MODEL=Gemma-4-31b
+MORPHEUS_FAST_MODEL=qwen35-9b
+CHUTES_BASE_URL=https://llm.chutes.ai/v1
+CHUTES_MODEL=Qwen/Qwen3-32B-TEE
+CHUTES_REASONING_MODEL=zai-org/GLM-5.1-TEE
 FX_API_URL=https://api.frankfurter.dev/v2
 FX_API_TIMEOUT_SECONDS=3
 ```
@@ -232,11 +239,13 @@ docker compose up
 | GET | `/api/health` | Backend status and active mode |
 | GET | `/api/demo` | Run the offline matched golden-path reconciliation |
 | GET | `/api/demo?case=matched\|needs_review\|unmatched` | Run a named deterministic demo outcome |
+| POST | `/api/upload` | Upload invoice, payment proof, and CSV/XLSX bank statement files |
 | POST | `/api/reconcile` | Reconcile optional structured inputs or default fixtures |
 | GET | `/api/report/{job_id}` | Download the generated PDF report |
 | GET | `/api/export/{job_id}` | Download the generated CSV audit log |
 
-`GET /api/demo` and `POST /api/reconcile` both return `ReconciliationResult`:
+`GET /api/demo`, `POST /api/upload`, and `POST /api/reconcile` return
+`ReconciliationResult`:
 
 ```json
 {

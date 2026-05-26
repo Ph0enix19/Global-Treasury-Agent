@@ -15,3 +15,4 @@ data/outputs/reports/*
 !data/outputs/reports/.gitkeep
 data/outputs/exports/*
 !data/outputs/exports/.gitkeep
+data/uploads/*
