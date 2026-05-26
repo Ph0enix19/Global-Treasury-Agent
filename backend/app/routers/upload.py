@@ -1,5 +1,6 @@
 """Multipart upload orchestration for Role 1 document-to-reconciliation flow."""
 
+import os
 import re
 from pathlib import Path
 from uuid import uuid4
@@ -16,6 +17,18 @@ router = APIRouter(prefix="/api/upload", tags=["upload"])
 UPLOAD_DIR = Path(__file__).resolve().parents[3] / "data" / "uploads"
 DOCUMENT_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
 BANK_EXTENSIONS = {".csv", ".xlsx"}
+
+
+def _demo_mode_enabled() -> bool:
+    return os.getenv("DEMO_MODE", "true").lower() != "false"
+
+
+def _used_local_extraction_fallback(*warnings: list[str]) -> bool:
+    return any(
+        "fallback" in warning.lower() and "morpheus extraction failed" in warning.lower()
+        for warning_list in warnings
+        for warning in warning_list
+    )
 
 
 def _safe_filename(field_name: str, filename: str, allowed_extensions: set[str]) -> str:
@@ -66,6 +79,16 @@ async def upload_and_reconcile(
         extractor = MorpheusExtractor()
         extracted_invoice = extractor.extract_invoice(document_path=invoice_path)
         extracted_payment = extractor.extract_payment_proof(document_path=payment_path)
+        if not _demo_mode_enabled() and (
+            extractor.fallback_mode
+            or _used_local_extraction_fallback(
+                extracted_invoice.warnings, extracted_payment.warnings
+            )
+        ):
+            raise ReconciliationInputError(
+                "Morpheus extraction is unavailable; uploaded financial documents "
+                "cannot be safely reconciled in live mode."
+            )
         request = ReconcileRequest(
             job_id=job_id,
             invoice=extracted_invoice,

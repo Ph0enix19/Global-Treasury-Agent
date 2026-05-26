@@ -26,7 +26,7 @@ for small teams without treasury tooling.
 
 The application implements this path:
 
-1. The dashboard triggers a demo reconciliation or future uploaded-document flow.
+1. The dashboard triggers a demo reconciliation or uploaded-document flow.
 2. A Morpheus-compatible extractor returns typed invoice and payment fields, using
    committed JSON fixtures when a live provider is unavailable.
 3. Deterministic Python code applies dated FX rates with local fallback and a named
@@ -75,10 +75,11 @@ The shared `main` baseline already includes:
 - A React/Vite dashboard that loads the golden-path result and downloads artifacts.
 - A committed architecture diagram and local run instructions.
 
-Current Role 2 increment: Tawila is adding CSV/XLSX bank-export parsing and live dated
-FX lookup with safe local fallback on `backend/matching-real-data`. Hemdan can connect
-the parser to document-upload orchestration, while Youssef can already expose the
-merged named cases without changing the response model.
+Current Role 1/2 integration: CSV/XLSX bank-export parsing, live dated FX lookup with
+safe local fallback, multipart upload orchestration, PDF reports, and CSV audit exports
+are wired into the shared API contract. The frontend upload flow posts files to
+`/api/upload`, receives a stored `job_id`, and can call `/api/reconcile` with that
+`job_id` to retrieve the same result.
 
 ## Branch Workflow
 
@@ -179,12 +180,12 @@ reached, the response FX trace records use of the local dated fallback:
 
 ```bash
 DEMO_MODE=false
-MORPHEUS_BASE_URL=https://api.mor.org/api/v1
-MORPHEUS_MODEL=Gemma-4-31b
-MORPHEUS_FAST_MODEL=qwen35-9b
-CHUTES_BASE_URL=https://llm.chutes.ai/v1
-CHUTES_MODEL=Qwen/Qwen3-32B-TEE
-CHUTES_REASONING_MODEL=zai-org/GLM-5.1-TEE
+MORPHEUS_BASE_URL=
+MORPHEUS_MODEL=
+MORPHEUS_FAST_MODEL=
+CHUTES_BASE_URL=
+CHUTES_MODEL=
+CHUTES_REASONING_MODEL=
 FX_API_URL=https://api.frankfurter.dev/v2
 FX_API_TIMEOUT_SECONDS=3
 ```
@@ -223,7 +224,7 @@ cd frontend
 npm run dev
 ```
 
-Open `http://localhost:5173`. Set `VITE_API_BASE_URL` only if the backend is hosted
+Open `http://localhost:5173`. Set `VITE_API_URL` only if the backend is hosted
 somewhere other than `http://localhost:8000`.
 
 Docker alternative:
@@ -282,6 +283,37 @@ curl -X POST http://localhost:8000/api/reconcile \
   -d '{}'
 ```
 
+Multipart upload example in offline demo mode:
+
+```bash
+curl -X POST http://localhost:8000/api/upload \
+  -F "invoice=@data/demo/sample_invoice.pdf" \
+  -F "payment_proof=@data/demo/sample_payment_proof.pdf" \
+  -F "bank_statement=@data/demo/sample_bank_statement.csv"
+```
+
+Then post the returned `job_id` back to `/api/reconcile`:
+
+```bash
+curl -X POST http://localhost:8000/api/reconcile \
+  -H "Content-Type: application/json" \
+  -d '{"job_id":"upload_job_id_here"}'
+```
+
+## Postman Smoke Tests
+
+Import [docs/postman/treasury-ai-reconciliation-agent.postman_collection.json](docs/postman/treasury-ai-reconciliation-agent.postman_collection.json)
+into Postman and run it against `http://localhost:8000` with `DEMO_MODE=true`.
+
+The upload request uses these repo-local demo files:
+
+- `data/demo/sample_invoice.pdf`
+- `data/demo/sample_payment_proof.pdf`
+- `data/demo/sample_bank_statement.csv`
+
+Screenshot placeholder: add the Postman collection runner result screenshot at
+`docs/screenshots/postman-smoke-test.png` before submission.
+
 ## Demo Flow
 
 1. Start backend and frontend, then click **Run Demo Mode**.
@@ -322,7 +354,7 @@ validation error rather than being replaced silently with a prebuilt demo outcom
 
 ## Future Improvements
 
-- Multipart invoice/payment and bank-statement upload routes using the existing parser.
+- Multi-invoice batch reconciliation and persistent job storage.
 - Live Morpheus extraction and Chutes explanation behind the existing wrappers.
 - Configurable treasury rate/fee policies, batch reconciliation, and human approval workflow.
 - Accounting integrations and secure document storage.

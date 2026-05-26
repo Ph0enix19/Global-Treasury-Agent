@@ -234,6 +234,39 @@ def test_upload_accepts_files_parses_statement_and_stores_result(monkeypatch) ->
     assert stored.json()["best_match"]["row_id"] == "uploaded_001"
 
 
+def test_upload_live_mode_without_extractor_key_returns_clear_error(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("MORPHEUS_API_KEY", "")
+    with (FIXTURE_DIR / "bank_statement_export.csv").open("rb") as statement:
+        response = client.post(
+            "/api/upload",
+            files={
+                "invoice": ("invoice.pdf", b"%PDF-1.4\ninvoice fixture", "application/pdf"),
+                "payment_proof": (
+                    "payment.png",
+                    b"\x89PNG\r\npayment fixture",
+                    "image/png",
+                ),
+                "bank_statement": (
+                    "bank_statement.csv",
+                    statement,
+                    "text/csv",
+                ),
+            },
+        )
+
+    assert response.status_code == 422
+    assert "cannot be safely reconciled in live mode" in response.json()["detail"]
+
+
+def test_unknown_upload_job_id_does_not_return_demo_match() -> None:
+    response = client.post("/api/reconcile", json={"job_id": "upload_missing"})
+
+    assert response.status_code == 422
+    assert "No stored reconciliation result found" in response.json()["detail"]
+    assert "Prebuilt demo result" not in response.text
+
+
 def test_supplied_rows_do_not_fall_back_to_fake_demo_results(monkeypatch) -> None:
     monkeypatch.setenv("DEMO_MODE", "true")
     response = client.post(

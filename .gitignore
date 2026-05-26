@@ -10,6 +10,7 @@ htmlcov/
 node_modules/
 dist/
 *.log
+.tmp/
 
 data/outputs/reports/*
 !data/outputs/reports/.gitkeep

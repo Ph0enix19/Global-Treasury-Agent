@@ -74,6 +74,40 @@ Role 1 local verification on `backend/hemdan`:
   use Docker Compose when a clean teammate/demo environment is more important than
   fast iteration.
 
+Final touch-up verification on May 26, 2026:
+- Read the AI Marathon guide book and combined master document. They confirm Track 3
+  expects payment-proof processing, FX/fee reasoning, discrepancy summaries, report
+  generation, a visible agentic workflow, and meaningful LLM use with deterministic
+  money calculations.
+- Preserved the frozen `ReconciliationResult` shape and the finance rule: LLM wrappers
+  extract/explain only; Python calculates FX, fees, match scores, confidence, status,
+  reports, and CSV audit values.
+- Tightened real-input safety: `/api/reconcile` now rejects unknown stored upload
+  `job_id` values instead of returning a demo match, and `/api/upload` returns a clear
+  `422` in live mode if Morpheus extraction is unavailable.
+- Updated README wording for the implemented upload flow, corrected the frontend env
+  name to `VITE_API_URL`, documented empty Morpheus/Chutes model env placeholders, and
+  added a Postman smoke-test section plus screenshot placeholder.
+- Added `docs/postman/treasury-ai-reconciliation-agent.postman_collection.json` and
+  demo-mode upload placeholder files under `data/demo/`.
+- Backend tests passed from `backend/.venv` with a repo-local temp directory:
+  `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .tmp\pytest_verify2`
+  returned `23 passed`. The first exact `.tmp\pytest` attempt hit a stale temp-directory
+  permission issue, so the final verification used `.tmp\pytest_verify2`.
+- Frontend verification passed: `npm install` completed and `npm run build` completed.
+  npm reported moderate audit advisories, but no build failure.
+- Local FastAPI smoke test passed before Docker: `/api/health`, `/api/demo?case=matched`,
+  `/api/demo?case=needs_review`, `/api/demo?case=unmatched`, `/api/reconcile`, multipart
+  `/api/upload`, stored-job `/api/reconcile`, `/api/report/{job_id}`, and
+  `/api/export/{job_id}` all returned expected results.
+- `docker compose config` was checked; `docker-compose.yml` maps backend `8000`,
+  frontend `5173`, `DEMO_MODE=true`, and `VITE_API_URL=http://localhost:8000`.
+- `docker compose up -d` is running successfully for teammate testing:
+  frontend at `http://localhost:5173` and backend at `http://localhost:8000`.
+  Docker-served backend smoke tests passed for health, matched demo, upload, stored-job
+  reconcile, PDF report, and CSV export.
+- `backend/.env` was not printed or modified.
+
 Immediate branch work:
 
 | Member | In Progress Next | Expected Handoff |

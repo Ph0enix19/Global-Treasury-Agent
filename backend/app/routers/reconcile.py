@@ -1,6 +1,7 @@
 """Shared reconciliation pipeline and POST API route."""
 
 import json
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -21,6 +22,7 @@ from app.services.fx_service import fetch_fx_rate
 from app.services.matcher import match_transactions
 from app.services.morpheus_extractor import MorpheusExtractor
 from app.services.report_generator import generate_reconciliation_report
+from app.utils.normalizer import normalize_date
 from app.utils.validators import collect_input_warnings
 
 
@@ -59,6 +61,28 @@ def _contains_supplied_data(payload: ReconcileRequest) -> bool:
     )
 
 
+def _validate_supplied_financial_inputs(
+    invoice: InvoiceData,
+    payment: PaymentProofData,
+    bank_rows: List[BankStatementRow],
+) -> None:
+    if invoice.amount is None or invoice.amount <= 0:
+        raise ReconciliationInputError("Invoice amount must be supplied and greater than zero.")
+    if not invoice.currency:
+        raise ReconciliationInputError("Invoice currency must be supplied.")
+    transaction_date = payment.date or invoice.date
+    if not transaction_date:
+        raise ReconciliationInputError("Invoice or payment date must be supplied.")
+    try:
+        date.fromisoformat(normalize_date(transaction_date))
+    except ValueError as exc:
+        raise ReconciliationInputError(
+            "Invoice or payment date must be a valid YYYY-MM-DD date."
+        ) from exc
+    if not bank_rows:
+        raise ReconciliationInputError("At least one bank statement row must be supplied.")
+
+
 def run_reconciliation(
     request: Optional[ReconcileRequest] = None,
     job_id: Optional[str] = None,
@@ -75,11 +99,17 @@ def run_reconciliation(
         and payload.job_id in JOB_STORE
     ):
         return JOB_STORE[payload.job_id]
+    if request is not None and payload.job_id and not _contains_supplied_data(payload):
+        raise ReconciliationInputError(
+            f"No stored reconciliation result found for job_id '{payload.job_id}'."
+        )
     try:
         extractor = MorpheusExtractor()
         invoice: InvoiceData = payload.invoice or extractor.extract_invoice()
         payment: PaymentProofData = payload.payment or extractor.extract_payment_proof()
         bank_rows = payload.bank_rows if payload.bank_rows is not None else _load_bank_rows()
+        if _contains_supplied_data(payload):
+            _validate_supplied_financial_inputs(invoice, payment, bank_rows)
         amount = invoice.amount or 0.0
         transaction_date = payment.date or invoice.date or "2026-05-20"
         fx_trace = fetch_fx_rate(
