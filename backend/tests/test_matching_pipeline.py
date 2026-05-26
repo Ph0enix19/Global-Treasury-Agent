@@ -16,7 +16,7 @@ from app.services.bank_statement_parser import BankStatementParseError, parse_ba
 from app.services.fee_engine import apply_bank_fees
 from app.services.fx_service import fetch_fx_rate
 from app.services.matcher import match_transactions
-from app.services.morpheus_extractor import MorpheusExtractor
+from app.services.morpheus_extractor import MorpheusExtractor, _parse_provider_json
 
 
 DEMO_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "demo"
@@ -185,6 +185,24 @@ def test_parser_reads_xlsx_and_rows_work_with_matcher(tmp_path) -> None:
     assert result.status == "matched"
 
 
+def test_morpheus_provider_json_parser_accepts_markdown_fences() -> None:
+    payload = _parse_provider_json(
+        """```json
+        {
+          "invoice_number": "INV-LIVE-2026-0526",
+          "amount": "250.00",
+          "currency": "USD"
+        }
+        ```"""
+    )
+
+    assert payload == {
+        "invoice_number": "INV-LIVE-2026-0526",
+        "amount": "250.00",
+        "currency": "USD",
+    }
+
+
 @pytest.mark.parametrize(
     ("content", "message"),
     [
@@ -309,6 +327,16 @@ def test_demo_defaults_to_matched_shared_contract() -> None:
     assert demo.json()["job_id"] == "demo_001"
     assert set(demo.json()) == RESULT_FIELDS
     assert set(reconcile.json()) == RESULT_FIELDS
+
+
+def test_demo_cases_remain_deterministic_in_live_mode(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "false")
+    response = client.get("/api/demo", params={"case": "matched"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "matched"
+    assert payload["fx_trace"]["source"] == "local_fallback_fx_rates"
 
 
 @pytest.mark.parametrize(

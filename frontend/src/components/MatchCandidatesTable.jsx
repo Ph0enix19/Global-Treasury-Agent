@@ -8,7 +8,7 @@ export default function MatchCandidatesTable({ rows = [], bestMatchId }) {
     <div style={styles.card}>
       <div style={styles.header}>
         <span style={styles.pill}>MATCH CANDIDATES</span>
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--muted-faint)" }}>
           {rows.length} bank row{rows.length !== 1 ? "s" : ""} evaluated
         </span>
       </div>
@@ -34,32 +34,32 @@ export default function MatchCandidatesTable({ rows = [], bestMatchId }) {
                   }}
                 >
                   <td style={styles.td}>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", color: "var(--muted-strong)" }}>
                       {row.row_id}
                     </span>
                   </td>
                   <td style={styles.td}>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", color: "#e8e8e8" }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", color: "var(--text)" }}>
                       {row.date}
                     </span>
                   </td>
                   <td style={styles.td}>
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>
+                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--text-soft)" }}>
                       {row.description}
                     </span>
                   </td>
                   <td style={{ ...styles.td, textAlign: "right" }}>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "13px", fontWeight: 600, color: "#e8e8e8" }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
                       {row.credit_amount?.toFixed(2)}
                     </span>
                   </td>
                   <td style={{ ...styles.td, textAlign: "center" }}>
                     {row.match_score !== undefined ? (
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center" }}>
-                        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                          <div style={{ width: `${Math.round(row.match_score * 100)}%`, height: "100%", background: isBest ? "#00e5a0" : "rgba(255,255,255,0.2)", borderRadius: "2px" }} />
+                        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border)", overflow: "hidden" }}>
+                          <div style={{ width: `${Math.round(row.match_score * 100)}%`, height: "100%", background: isBest ? "#00e5a0" : "var(--muted-faint)", borderRadius: "2px" }} />
                         </div>
-                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", color: isBest ? "#00e5a0" : "rgba(255,255,255,0.3)" }}>
+                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11px", color: isBest ? "#00e5a0" : "var(--muted-soft)" }}>
                           {Math.round(row.match_score * 100)}%
                         </span>
                       </div>
@@ -94,10 +94,12 @@ export default function MatchCandidatesTable({ rows = [], bestMatchId }) {
 
 const styles = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
     borderRadius: "12px",
     padding: "20px",
+    boxShadow: "var(--shadow)",
+    minWidth: 0,
   },
   header: {
     display: "flex",
@@ -110,7 +112,7 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.1em",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
   },
   table: {
     width: "100%",
@@ -121,14 +123,14 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.08em",
-    color: "rgba(255,255,255,0.25)",
+    color: "var(--muted-faint)",
     textAlign: "left",
     padding: "6px 10px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    borderBottom: "1px solid var(--border)",
   },
   td: {
     padding: "10px 10px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid var(--border-soft)",
     verticalAlign: "middle",
   },
 };

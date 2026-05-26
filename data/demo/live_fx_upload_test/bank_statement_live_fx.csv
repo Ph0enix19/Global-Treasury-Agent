@@ -1,0 +1,5 @@
+row_id,date,description,credit_amount,debit_amount,currency
+live_row_001,2026-05-24,Card settlement marketplace payout,314.20,,MYR
+live_row_002,2026-05-26,Incoming wire INV-LIVE-2026-0526 Meridian Cloud,968.92,,MYR
+live_row_003,2026-05-26,Incoming wire unrelated customer,770.10,,MYR
+live_row_004,2026-05-27,Supplier refund operations,122.00,,MYR

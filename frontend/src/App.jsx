@@ -23,11 +23,57 @@ const SCENARIOS = [
   { id: "unmatched",    label: "Unmatched",    emoji: "✗", color: "#ff4d6d", bg: "rgba(255,77,109,0.08)", border: "rgba(255,77,109,0.3)" },
 ];
 
+const THEME_TOKENS = {
+  dark: {
+    "--app-bg": "#0a0a0f",
+    "--header-bg": "rgba(255,255,255,0.02)",
+    "--panel": "rgba(255,255,255,0.03)",
+    "--panel-soft": "rgba(255,255,255,0.02)",
+    "--panel-strong": "rgba(255,255,255,0.04)",
+    "--panel-hover": "rgba(255,255,255,0.05)",
+    "--border": "rgba(255,255,255,0.07)",
+    "--border-soft": "rgba(255,255,255,0.05)",
+    "--border-strong": "rgba(255,255,255,0.12)",
+    "--text": "#e8e8e8",
+    "--text-soft": "rgba(255,255,255,0.75)",
+    "--muted": "rgba(255,255,255,0.4)",
+    "--muted-strong": "rgba(255,255,255,0.5)",
+    "--muted-soft": "rgba(255,255,255,0.3)",
+    "--muted-faint": "rgba(255,255,255,0.2)",
+    "--shadow": "none",
+    "--scroll-thumb": "rgba(255,255,255,0.16)",
+  },
+  light: {
+    "--app-bg": "#f6f8fb",
+    "--header-bg": "rgba(255,255,255,0.86)",
+    "--panel": "#ffffff",
+    "--panel-soft": "#f4f7fb",
+    "--panel-strong": "#eef3f8",
+    "--panel-hover": "#eaf2ff",
+    "--border": "rgba(15,23,42,0.12)",
+    "--border-soft": "rgba(15,23,42,0.08)",
+    "--border-strong": "rgba(15,23,42,0.2)",
+    "--text": "#142033",
+    "--text-soft": "rgba(20,32,51,0.78)",
+    "--muted": "rgba(20,32,51,0.55)",
+    "--muted-strong": "rgba(20,32,51,0.68)",
+    "--muted-soft": "rgba(20,32,51,0.4)",
+    "--muted-faint": "rgba(20,32,51,0.28)",
+    "--shadow": "0 14px 34px rgba(15,23,42,0.08)",
+    "--scroll-thumb": "rgba(20,32,51,0.22)",
+  },
+};
+
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
+    return window.localStorage.getItem("treasury-theme") || "dark";
+  });
   const [mode, setMode]           = useState("idle"); // "idle" | "demo" | "upload"
   const [selectedScenario, setSelectedScenario] = useState(null); // scenario id string
   const [scenarioLoading, setScenarioLoading]   = useState(false);
   const [scenarioError, setScenarioError]       = useState("");
+  const [uploadError, setUploadError]           = useState("");
 
   const [files, setFiles]                   = useState({ invoice: null, paymentProof: null, bankStatement: null });
   const [phase, setPhase]                   = useState("idle");
@@ -38,6 +84,14 @@ export default function App() {
 
   const activeResult = result;
   const activeScenario = SCENARIOS.find((s) => s.id === selectedScenario);
+  const resultScenario = SCENARIOS.find((s) => s.id === activeResult?.status) || activeScenario;
+  const isLight = theme === "light";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("treasury-theme", theme);
+    }
+  }, [theme]);
 
   // ── Animate timeline ──────────────────────────────────────────────────────
   const animateTimeline = useCallback(async () => {
@@ -57,6 +111,7 @@ export default function App() {
     setSelectedScenario(scenarioId);
     setMode("demo");
     setScenarioError("");
+    setUploadError("");
     setScenarioLoading(true);
     setResult(null);
     setCompletedSteps([]);
@@ -83,11 +138,17 @@ export default function App() {
       await handleSelectScenario("matched");
       return;
     }
+    if (!files.invoice || !files.paymentProof || !files.bankStatement) {
+      setUploadError("Upload requires all three files: invoice, payment proof, and bank statement.");
+      setPhase("error");
+      return;
+    }
     setMode("upload");
     setSelectedScenario(null);
     setPhase("running");
     setCompletedSteps([]);
     setResult(null);
+    setUploadError("");
 
     try {
       setCurrentStep("upload");
@@ -125,7 +186,9 @@ export default function App() {
       setPhase("done");
     } catch (err) {
       console.error(err);
+      setUploadError(err.message || "Upload reconciliation failed.");
       setPhase("error");
+      setCurrentStep(null);
     }
   };
 
@@ -133,7 +196,7 @@ export default function App() {
   const isRunning = scenarioLoading || phase === "running";
 
   return (
-    <div style={styles.root}>
+    <div data-theme={theme} style={{ ...styles.root, ...THEME_TOKENS[theme] }}>
       <style>{globalStyles}</style>
 
       {/* ── Header ── */}
@@ -158,10 +221,20 @@ export default function App() {
               </span>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setTheme(isLight ? "dark" : "light")}
+            style={styles.themeToggle}
+            aria-label={`Switch to ${isLight ? "dark" : "light"} mode`}
+            title={`Switch to ${isLight ? "dark" : "light"} mode`}
+          >
+            <span style={styles.themeToggleIcon}>{isLight ? "☾" : "☀"}</span>
+            <span>{isLight ? "Dark" : "Light"}</span>
+          </button>
         </div>
       </header>
 
-      <main style={styles.main}>
+      <main className="app-main" style={styles.main}>
 
         {/* ── Scenario Selector ── */}
         <section style={styles.scenarioSection}>
@@ -180,9 +253,9 @@ export default function App() {
                   disabled={isRunning}
                   style={{
                     ...styles.scenarioBtn,
-                    background:   isActive ? s.bg    : "rgba(255,255,255,0.03)",
-                    border:       isActive ? `1.5px solid ${s.border}` : "1.5px solid rgba(255,255,255,0.07)",
-                    color:        isActive ? s.color : "rgba(255,255,255,0.45)",
+                    background:   isActive ? s.bg    : "var(--panel)",
+                    border:       isActive ? `1.5px solid ${s.border}` : "1.5px solid var(--border)",
+                    color:        isActive ? s.color : "var(--muted)",
                     boxShadow:    isActive ? `0 0 18px ${s.color}22` : "none",
                     cursor:       isRunning ? "not-allowed" : "pointer",
                     opacity:      isRunning && !isActive ? 0.45 : 1,
@@ -193,8 +266,8 @@ export default function App() {
                   ) : (
                     <span style={{
                       width: 28, height: 28, borderRadius: "50%",
-                      background: isActive ? s.bg : "rgba(255,255,255,0.05)",
-                      border: `1px solid ${isActive ? s.border : "rgba(255,255,255,0.1)"}`,
+                      background: isActive ? s.bg : "var(--panel-strong)",
+                      border: `1px solid ${isActive ? s.border : "var(--border-strong)"}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 13, flexShrink: 0,
                     }}>
@@ -224,22 +297,22 @@ export default function App() {
           )}
 
           {/* Status badge when result loaded */}
-          {activeResult && activeScenario && !scenarioLoading && (
+          {activeResult && resultScenario && !scenarioLoading && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
               <span style={{
                 padding: "4px 14px", borderRadius: 999,
-                background: activeScenario.bg,
-                border: `1px solid ${activeScenario.border}`,
-                color: activeScenario.color,
+                background: resultScenario.bg,
+                border: `1px solid ${resultScenario.border}`,
+                color: resultScenario.color,
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
               }}>
-                {activeScenario.emoji} {activeScenario.label.toUpperCase()}
+                {resultScenario.emoji} {resultScenario.label.toUpperCase()}
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--muted-soft)" }}>
                 {activeResult.job_id}
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--muted-faint)" }}>
                 {Math.round((activeResult.confidence || 0) * 100)}% confidence
               </span>
               {activeResult.source === "mock" && (
@@ -259,10 +332,10 @@ export default function App() {
         </section>
 
         {/* ── 3-column layout ── */}
-        <div style={styles.grid}>
+        <div className="app-grid" style={styles.grid}>
 
           {/* LEFT */}
-          <div style={styles.leftPanel}>
+          <div className="app-left-panel" style={styles.leftPanel}>
             <FileUpload files={files} onChange={setFiles} />
             <div style={{ marginTop: "12px" }}>
               <AgentTimeline
@@ -286,6 +359,11 @@ export default function App() {
                 </span>
               ) : phase === "done" ? "↺ Reconcile Again" : "▶ Run Reconciliation"}
             </button>
+            {uploadError && (
+              <div style={styles.errorBanner}>
+                {uploadError}
+              </div>
+            )}
             <div style={{ marginTop: "12px" }}>
               <ReviewQueue
                 cases={DEMO_CASES}
@@ -299,7 +377,7 @@ export default function App() {
           </div>
 
           {/* CENTER */}
-          <div style={styles.centerPanel}>
+          <div className="app-center-panel" style={styles.centerPanel}>
             {!activeResult && !isRunning && (
               <div style={styles.emptyState}>
                 <div style={styles.emptyIcon}>◈</div>
@@ -336,7 +414,7 @@ export default function App() {
           </div>
 
           {/* RIGHT */}
-          <div style={styles.rightPanel}>
+          <div className="app-right-panel" style={styles.rightPanel}>
             {activeResult && (
               <>
                 <ExtractedFieldsCard invoice={activeResult.invoice} payment={activeResult.payment} />
@@ -347,7 +425,7 @@ export default function App() {
                   <div style={styles.statsPill}>SESSION SUMMARY</div>
                   <div style={styles.statsGrid}>
                     {[
-                      { label: "Total Cases", value: SCENARIOS.length,                                                      color: "#e8e8e8" },
+                      { label: "Total Cases", value: SCENARIOS.length,                                                      color: "var(--text)" },
                       { label: "Matched",      value: "✓", color: "#00e5a0" },
                       { label: "Review",       value: "⚠", color: "#f5a623" },
                       { label: "Unmatched",    value: "✗", color: "#ff4d6d" },
@@ -377,23 +455,56 @@ export default function App() {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = {
-  root: { minHeight: "100vh", background: "#0a0a0f", color: "#e8e8e8", display: "flex", flexDirection: "column" },
+  root: {
+    minHeight: "100vh",
+    background: "var(--app-bg)",
+    color: "var(--text)",
+    display: "flex",
+    flexDirection: "column",
+    transition: "background 0.2s ease, color 0.2s ease",
+  },
   header: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "16px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)",
-    background: "rgba(255,255,255,0.02)", backdropFilter: "blur(8px)",
+    padding: "16px 28px", borderBottom: "1px solid var(--border)",
+    background: "var(--header-bg)", backdropFilter: "blur(8px)",
     position: "sticky", top: 0, zIndex: 50, flexWrap: "wrap", gap: "12px",
   },
   logo: { display: "flex", alignItems: "center", gap: "12px" },
   logoMark: { fontSize: "24px", color: "#a78bfa", lineHeight: 1 },
-  logoName: { fontFamily: "'Syne', sans-serif", fontSize: "16px", fontWeight: 800, color: "#e8e8e8", letterSpacing: "0.02em" },
-  logoSub:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "1px" },
+  logoName: { fontFamily: "'Syne', sans-serif", fontSize: "16px", fontWeight: 800, color: "var(--text)", letterSpacing: "0.02em" },
+  logoSub:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--muted-soft)", marginTop: "1px" },
   headerRight: { display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" },
   statusPills: { display: "flex", gap: "6px", flexWrap: "wrap" },
   statusPill: {
     display: "inline-flex", alignItems: "center", gap: "5px",
     padding: "3px 10px", borderRadius: "999px", border: "1px solid",
     fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.04em",
+  },
+  themeToggle: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "7px",
+    padding: "7px 11px",
+    borderRadius: "999px",
+    border: "1px solid var(--border)",
+    background: "var(--panel)",
+    color: "var(--text)",
+    cursor: "pointer",
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: "10px",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    boxShadow: "var(--shadow)",
+  },
+  themeToggleIcon: {
+    width: 18,
+    height: 18,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    background: "var(--panel-strong)",
+    flexShrink: 0,
   },
   main: { flex: 1, padding: "20px 28px", maxWidth: "1440px", width: "100%", margin: "0 auto", boxSizing: "border-box" },
 
@@ -402,9 +513,9 @@ const styles = {
   scenarioLabel:   { display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, flexWrap: "wrap" },
   scenarioLabelText: {
     fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 700,
-    letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)",
+    letterSpacing: "0.1em", color: "var(--muted-strong)",
   },
-  scenarioHint: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.2)" },
+  scenarioHint: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--muted-faint)" },
   scenarioButtons: { display: "flex", gap: 10, flexWrap: "wrap" },
   scenarioBtn: {
     display: "flex", alignItems: "center", gap: 10,
@@ -415,7 +526,7 @@ const styles = {
   scenarioBtnText: { display: "flex", flexDirection: "column", gap: 2, textAlign: "left" },
   spinnerSmall: {
     width: 18, height: 18, borderRadius: "50%",
-    border: "2px solid rgba(255,255,255,0.15)",
+    border: "2px solid var(--border-strong)",
     borderTopColor: "#fff",
     display: "inline-block",
     animation: "spin 0.7s linear infinite",
@@ -427,10 +538,15 @@ const styles = {
     color: "#ff4d6d", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11,
   },
 
-  grid: { display: "grid", gridTemplateColumns: "300px 1fr 280px", gap: "16px", alignItems: "flex-start" },
-  leftPanel:   { display: "flex", flexDirection: "column" },
-  centerPanel: { display: "flex", flexDirection: "column" },
-  rightPanel:  { display: "flex", flexDirection: "column" },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(260px, 320px) minmax(0, 1fr) minmax(250px, 300px)",
+    gap: "16px",
+    alignItems: "flex-start",
+  },
+  leftPanel:   { display: "flex", flexDirection: "column", minWidth: 0 },
+  centerPanel: { display: "flex", flexDirection: "column", minWidth: 0 },
+  rightPanel:  { display: "flex", flexDirection: "column", minWidth: 0 },
 
   runBtn: {
     width: "100%", marginTop: "12px", padding: "14px", borderRadius: "10px",
@@ -440,28 +556,29 @@ const styles = {
   },
   spinner: {
     width: 14, height: 14, borderRadius: "50%",
-    border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid #fff",
+    border: "2px solid var(--border-strong)", borderTop: "2px solid #fff",
     display: "inline-block", animation: "spin 0.7s linear infinite",
   },
   emptyState: {
     textAlign: "center", padding: "80px 40px",
-    background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px",
+    background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px",
+    boxShadow: "var(--shadow)",
   },
   emptyIcon:  { fontSize: "48px", color: "rgba(167,139,250,0.3)", marginBottom: "16px" },
-  emptyTitle: { fontFamily: "'Syne', sans-serif", fontSize: "20px", fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: "10px" },
-  emptyDesc:  { fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "rgba(255,255,255,0.25)", lineHeight: "1.7", maxWidth: "380px", margin: "0 auto" },
+  emptyTitle: { fontFamily: "'Syne', sans-serif", fontSize: "20px", fontWeight: 700, color: "var(--muted-strong)", marginBottom: "10px" },
+  emptyDesc:  { fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "var(--muted-faint)", lineHeight: "1.7", maxWidth: "380px", margin: "0 auto" },
 
-  statsCard:  { marginTop: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "16px" },
-  statsPill:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "14px" },
+  statsCard:  { marginTop: "12px", background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", boxShadow: "var(--shadow)" },
+  statsPill:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", color: "var(--muted)", marginBottom: "14px" },
   statsGrid:  { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" },
-  statItem:   { textAlign: "center", padding: "10px", background: "rgba(255,255,255,0.03)", borderRadius: "8px" },
-  statValue:  { fontFamily: "'Syne', sans-serif", fontSize: "22px", fontWeight: 800, color: "#e8e8e8", marginBottom: "3px" },
-  statLabel:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" },
+  statItem:   { textAlign: "center", padding: "10px", background: "var(--panel-soft)", borderRadius: "8px" },
+  statValue:  { fontFamily: "'Syne', sans-serif", fontSize: "22px", fontWeight: 800, color: "var(--text)", marginBottom: "3px" },
+  statLabel:  { fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--muted-soft)", letterSpacing: "0.05em" },
 
   footer: {
     display: "flex", justifyContent: "space-between", padding: "14px 28px",
-    borderTop: "1px solid rgba(255,255,255,0.05)",
-    fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.2)",
+    borderTop: "1px solid var(--border-soft)",
+    fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--muted-faint)",
     flexWrap: "wrap", gap: "6px",
   },
 };
@@ -473,6 +590,32 @@ const globalStyles = `
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 2px; }
   button { -webkit-font-smoothing: antialiased; }
+  @media (max-width: 1180px) {
+    .app-grid {
+      grid-template-columns: minmax(260px, 340px) minmax(0, 1fr) !important;
+    }
+    .app-right-panel {
+      grid-column: 1 / -1;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+  }
+  @media (max-width: 860px) {
+    .app-main {
+      padding: 16px !important;
+    }
+    .app-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .app-right-panel {
+      display: flex !important;
+      grid-template-columns: none;
+    }
+    .trace-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+  }
 `;

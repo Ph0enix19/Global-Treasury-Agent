@@ -44,7 +44,7 @@ The application implements this path:
 |---|---|---|
 | Backend | FastAPI, Pydantic, Uvicorn | Modular typed API and shared response contract |
 | Frontend | React, Vite | Single-page demo dashboard and API integration |
-| Extraction | Morpheus wrapper placeholder | Mocked structured invoice/payment extraction |
+| Extraction | Morpheus-compatible vision wrapper | Live invoice/payment extraction with safe demo fallback |
 | Explanation | Chutes wrapper placeholder | Deterministic offline-friendly explanations |
 | Matching | Python, RapidFuzz fallback support | Explainable scoring and decisions |
 | FX and fees | Python, Frankfurter v2 + local JSON | Live dated rates with traceable offline fallback |
@@ -72,14 +72,15 @@ The shared `main` baseline already includes:
 - Deterministic USD/MYR FX conversion, fee calculation, and transaction scoring.
 - Local extraction, FX, and complete-result fallback fixtures for offline demo mode.
 - Named `matched`, `needs_review`, and `unmatched` demo cases with pytest coverage.
-- A React/Vite dashboard that loads the golden-path result and downloads artifacts.
+- A React/Vite dashboard with named scenarios, upload flow, artifact downloads, and
+  dark/light mode.
 - A committed architecture diagram and local run instructions.
 
 Current Role 1/2 integration: CSV/XLSX bank-export parsing, live dated FX lookup with
-safe local fallback, multipart upload orchestration, PDF reports, and CSV audit exports
-are wired into the shared API contract. The frontend upload flow posts files to
-`/api/upload`, receives a stored `job_id`, and can call `/api/reconcile` with that
-`job_id` to retrieve the same result.
+safe local fallback, multipart upload orchestration, Morpheus vision extraction, PDF
+reports, and CSV audit exports are wired into the shared API contract. The frontend
+upload flow posts files to `/api/upload`, receives a stored `job_id`, and can call
+`/api/reconcile` with that `job_id` to retrieve the same result.
 
 ## Branch Workflow
 
@@ -180,14 +181,24 @@ reached, the response FX trace records use of the local dated fallback:
 
 ```bash
 DEMO_MODE=false
+MORPHEUS_API_KEY=
 MORPHEUS_BASE_URL=
 MORPHEUS_MODEL=
 MORPHEUS_FAST_MODEL=
+CHUTES_API_KEY=
 CHUTES_BASE_URL=
 CHUTES_MODEL=
 CHUTES_REASONING_MODEL=
 FX_API_URL=https://api.frankfurter.dev/v2
 FX_API_TIMEOUT_SECONDS=3
+```
+
+Recommended Morpheus defaults for live document upload:
+
+```bash
+MORPHEUS_BASE_URL=https://api.mor.org/api/v1
+MORPHEUS_MODEL=gemma-4-31b
+MORPHEUS_FAST_MODEL=gemma-4-26b-a4b
 ```
 
 Frontend setup:
@@ -300,6 +311,27 @@ curl -X POST http://localhost:8000/api/reconcile \
   -d '{"job_id":"upload_job_id_here"}'
 ```
 
+Live Morpheus + FX sample upload:
+
+```bash
+curl -X POST http://localhost:8000/api/upload \
+  -F "invoice=@data/demo/live_fx_upload_test/invoice_INV-LIVE-2026-0526.png" \
+  -F "payment_proof=@data/demo/live_fx_upload_test/payment_proof_INV-LIVE-2026-0526.png" \
+  -F "bank_statement=@data/demo/live_fx_upload_test/bank_statement_live_fx.csv"
+```
+
+Expected live sample result when `DEMO_MODE=false`, Morpheus is configured, and
+Frankfurter is reachable:
+
+- `status`: `matched`
+- `confidence`: `1.0`
+- `invoice.invoice_number`: `INV-LIVE-2026-0526`
+- `fx_trace.source`: `frankfurter_live`
+- `fx_trace.rate`: `3.955`
+- `fx_trace.fallback_used`: `false`
+- `fee_trace.expected_credit`: `968.92`
+- `best_match.row_id`: `live_row_002`
+
 ## Postman Smoke Tests
 
 Import [docs/postman/treasury-ai-reconciliation-agent.postman_collection.json](docs/postman/treasury-ai-reconciliation-agent.postman_collection.json)
@@ -324,6 +356,15 @@ Screenshot placeholder: add the Postman collection runner result screenshot at
 6. Download the PDF report and audit CSV directly from the result panel.
 7. Use `?case=needs_review` and `?case=unmatched` for exception-handling scenes.
 
+For the live upload GUI flow, open `http://localhost:5173`, upload the three files in
+`data/demo/live_fx_upload_test/`, and click **Run Reconciliation**. The document upload
+cards truncate long file names, the theme toggle switches dark/light mode, and artifact
+buttons download the stored job report/export.
+
+Named demo scenarios remain deterministic even when the backend is running with
+`DEMO_MODE=false`; live FX is used for real uploaded/supplied financial inputs, while
+`/api/demo` keeps the fixture FX values needed for repeatable presentation outcomes.
+
 ## Fallback Strategy
 
 The demo does not rely on an external network or an API key:
@@ -335,8 +376,9 @@ The demo does not rely on an external network or an API key:
 - `demo_results.json` is an emergency complete response if the pipeline fails.
 - PDF generation has a basic built-in output path if ReportLab is unavailable.
 
-The mock provider boundaries are intentionally stable so real Morpheus and Chutes
-adapters can be connected later without changing the API contract.
+In live mode, real uploaded documents do not silently fall back to fake extraction. If
+Morpheus cannot safely extract invoice/payment fields, `/api/upload` returns a clear
+422 instead of producing a fake successful match.
 
 ## Role 2 Real-Data Handoff
 
@@ -355,7 +397,7 @@ validation error rather than being replaced silently with a prebuilt demo outcom
 ## Future Improvements
 
 - Multi-invoice batch reconciliation and persistent job storage.
-- Live Morpheus extraction and Chutes explanation behind the existing wrappers.
+- Chutes API-backed explanation behind the existing deterministic explanation boundary.
 - Configurable treasury rate/fee policies, batch reconciliation, and human approval workflow.
 - Accounting integrations and secure document storage.
 
@@ -365,6 +407,8 @@ validation error rather than being replaced silently with a prebuilt demo outcom
 - Confirm `GET /api/demo` and each named `case` return the expected deterministic status.
 - Confirm `POST /api/reconcile` returns the same field structure as demo.
 - Confirm PDF and CSV links download generated artifacts.
+- Confirm live upload with `data/demo/live_fx_upload_test/` returns a matched result
+  only when Morpheus extraction succeeds.
 - Confirm `pytest` passes before merging backend changes.
 - Record the final demo in `DEMO_MODE=true` after the above checks pass.
 

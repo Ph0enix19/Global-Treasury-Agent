@@ -6,7 +6,7 @@ function Field({ label, value, warn }) {
   return (
     <div style={styles.field}>
       <div style={styles.fieldLabel}>{label}</div>
-      <div style={{ ...styles.fieldValue, color: empty ? "rgba(255,255,255,0.2)" : warn ? "#f5a623" : "#e8e8e8" }}>
+      <div style={{ ...styles.fieldValue, color: empty ? "var(--muted-faint)" : warn ? "#f5a623" : "var(--text)" }}>
         {empty ? "—" : String(value)}
         {warn && <span style={styles.warnDot} title="Uncertain extraction">⚠</span>}
       </div>
@@ -62,8 +62,8 @@ export default function ExtractedFieldsCard({ invoice, payment }) {
             onClick={() => setTab(t)}
             style={{
               ...styles.tab,
-              borderBottom: tab === t ? "2px solid rgba(255,255,255,0.6)" : "2px solid transparent",
-              color: tab === t ? "#e8e8e8" : "rgba(255,255,255,0.3)",
+              borderBottom: tab === t ? "2px solid var(--text-soft)" : "2px solid transparent",
+              color: tab === t ? "var(--text)" : "var(--muted-soft)",
             }}
           >
             {t === "invoice" ? "Invoice" : "Payment Proof"}
@@ -100,10 +100,13 @@ export default function ExtractedFieldsCard({ invoice, payment }) {
 
 const styles = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
     borderRadius: "12px",
     padding: "20px",
+    boxShadow: "var(--shadow)",
+    minWidth: 0,
+    overflow: "hidden",
   },
   header: {
     display: "flex",
@@ -116,12 +119,12 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.1em",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
   },
   tabs: {
     display: "flex",
     gap: "0",
-    borderBottom: "1px solid rgba(255,255,255,0.07)",
+    borderBottom: "1px solid var(--border)",
     marginBottom: "14px",
   },
   tab: {
@@ -146,7 +149,7 @@ const styles = {
   fieldLabel: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
     letterSpacing: "0.05em",
     marginBottom: "2px",
   },
@@ -157,6 +160,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "5px",
+    minWidth: 0,
+    overflowWrap: "anywhere",
   },
   warnDot: {
     fontSize: "10px",
@@ -178,7 +183,7 @@ const styles = {
   source: {
     marginTop: "14px",
     paddingTop: "12px",
-    borderTop: "1px solid rgba(255,255,255,0.05)",
+    borderTop: "1px solid var(--border-soft)",
     display: "flex",
     alignItems: "center",
     gap: "8px",
@@ -186,12 +191,12 @@ const styles = {
   sourceLabel: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.2)",
+    color: "var(--muted-faint)",
   },
   sourceValue: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.5)",
+    color: "var(--muted-strong)",
     fontWeight: 600,
   },
 };

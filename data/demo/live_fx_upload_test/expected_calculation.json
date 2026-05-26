@@ -1,0 +1,21 @@
+{
+  "invoice_number": "INV-LIVE-2026-0526",
+  "payer": "Meridian Cloud Pte Ltd",
+  "payee": "Northstar Design LLC",
+  "amount_usd": 250.0,
+  "currency": "USD",
+  "invoice_date": "2026-05-26",
+  "due_date": "2026-06-05",
+  "payment_method": "International Wire Transfer",
+  "bank_currency": "MYR",
+  "fx_rate_source": "Frankfurter API",
+  "fx_rate_date": "2026-05-26",
+  "fx_rate_usd_myr": 3.955,
+  "converted_myr": 988.75,
+  "fee_rule": "incoming_wire",
+  "percentage_rate": 0.015,
+  "percentage_fee_myr": 14.83,
+  "flat_fee_myr": 5.0,
+  "total_fee_myr": 19.83,
+  "expected_credit_myr": 968.92
+}

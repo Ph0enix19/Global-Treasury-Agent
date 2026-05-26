@@ -6,7 +6,7 @@ export default function DiscrepancyPanel({ result }) {
 
   const { warnings = [], explanation, fee_trace, best_match, status } = result;
 
-  const expectedNet = fee_trace?.net_after_fee;
+  const expectedNet = fee_trace?.expected_credit ?? fee_trace?.net_after_fee;
   const received = best_match?.credit_amount;
   const gap = expectedNet && received ? Math.abs(expectedNet - received).toFixed(2) : null;
 
@@ -112,7 +112,7 @@ const styles = {
     color: "rgba(245,166,35,0.5)",
   },
   explanationBox: {
-    background: "rgba(255,255,255,0.03)",
+    background: "var(--panel)",
     borderRadius: "8px",
     padding: "14px",
     marginBottom: "14px",
@@ -120,7 +120,7 @@ const styles = {
   explanationLabel: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
     marginBottom: "8px",
     letterSpacing: "0.06em",
   },
@@ -128,7 +128,7 @@ const styles = {
     fontFamily: "'Inter', sans-serif",
     fontSize: "13px",
     lineHeight: "1.65",
-    color: "rgba(255,255,255,0.7)",
+    color: "var(--text-soft)",
     margin: 0,
   },
   warningList: {
@@ -137,7 +137,7 @@ const styles = {
   warningTitle: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
     marginBottom: "8px",
     letterSpacing: "0.06em",
   },
@@ -156,7 +156,7 @@ const styles = {
     paddingTop: "2px",
   },
   action: {
-    background: "rgba(255,255,255,0.04)",
+    background: "var(--panel)",
     borderRadius: "8px",
     padding: "12px 14px",
   },
@@ -164,13 +164,13 @@ const styles = {
     fontFamily: "'Syne', sans-serif",
     fontSize: "12px",
     fontWeight: 700,
-    color: "#e8e8e8",
+    color: "var(--text)",
     marginBottom: "4px",
   },
   actionDesc: {
     fontFamily: "'Inter', sans-serif",
     fontSize: "12px",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
     lineHeight: "1.5",
   },
 };

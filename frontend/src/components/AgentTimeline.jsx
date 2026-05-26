@@ -40,7 +40,7 @@ export default function AgentTimeline({ isRunning, completedSteps = [], currentS
                 <div
                   style={{
                     ...styles.connector,
-                    background: done ? "rgba(0,229,160,0.5)" : "rgba(255,255,255,0.07)",
+                    background: done ? "rgba(0,229,160,0.5)" : "var(--border)",
                   }}
                 />
               )}
@@ -52,12 +52,12 @@ export default function AgentTimeline({ isRunning, completedSteps = [], currentS
                     ? "rgba(0,229,160,0.15)"
                     : active
                     ? "rgba(245,166,35,0.15)"
-                    : "rgba(255,255,255,0.04)",
+                    : "var(--panel-strong)",
                   border: done
                     ? "1.5px solid rgba(0,229,160,0.5)"
                     : active
                     ? "1.5px solid rgba(245,166,35,0.5)"
-                    : "1.5px solid rgba(255,255,255,0.1)",
+                    : "1.5px solid var(--border-strong)",
                 }}
               >
                 {done ? (
@@ -67,7 +67,7 @@ export default function AgentTimeline({ isRunning, completedSteps = [], currentS
                 ) : active ? (
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f5a623", display: "inline-block", animation: "pulse 1s infinite" }} />
                 ) : (
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--border-strong)", display: "inline-block" }} />
                 )}
               </div>
               {/* Label */}
@@ -75,7 +75,7 @@ export default function AgentTimeline({ isRunning, completedSteps = [], currentS
                 <div
                   style={{
                     ...styles.stepLabel,
-                    color: done ? "#e8e8e8" : active ? "#f5a623" : "rgba(255,255,255,0.3)",
+                    color: done ? "var(--text)" : active ? "#f5a623" : "var(--muted-soft)",
                   }}
                 >
                   {step.label}
@@ -94,10 +94,11 @@ export default function AgentTimeline({ isRunning, completedSteps = [], currentS
 
 const styles = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
     borderRadius: "12px",
     padding: "20px",
+    boxShadow: "var(--shadow)",
   },
   cardHeader: {
     display: "flex",
@@ -110,7 +111,7 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.1em",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
   },
   liveDot: {
     width: 8,
@@ -163,7 +164,7 @@ const styles = {
   stepDetail: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "11px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
     marginTop: "2px",
   },
 };

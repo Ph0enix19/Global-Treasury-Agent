@@ -70,7 +70,7 @@ export default function ConfidenceBadge({ status, confidence }) {
             width: "80px",
             height: "6px",
             borderRadius: "3px",
-            background: "rgba(255,255,255,0.08)",
+            background: "var(--border)",
             overflow: "hidden",
           }}
         >
@@ -98,7 +98,7 @@ export default function ConfidenceBadge({ status, confidence }) {
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "11px",
-            color: "rgba(255,255,255,0.35)",
+            color: "var(--muted)",
             letterSpacing: "0.04em",
           }}
         >

@@ -1,6 +1,6 @@
 // src/components/ReportDownload.jsx
 import React, { useState } from "react";
-import { getReportUrl, getExportUrl } from "../lib/api";
+import { fetchArtifact, getReportUrl, getExportUrl } from "../lib/api";
 
 export default function ReportDownload({ jobId, disabled }) {
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -11,10 +11,9 @@ export default function ReportDownload({ jobId, disabled }) {
     setPdfLoading(true);
     try {
       const url = await getReportUrl(jobId);
-      window.open(url, "_blank");
+      await fetchArtifact(url, `${jobId}_reconciliation_report.pdf`);
     } catch (e) {
-      // In demo/mock mode, show a friendly message
-      alert("PDF report would open here when connected to the backend. Run the backend server to generate real reports.");
+      alert(e.message || "PDF report is not available for this job.");
     }
     setTimeout(() => setPdfLoading(false), 1000);
   };
@@ -24,9 +23,9 @@ export default function ReportDownload({ jobId, disabled }) {
     setCsvLoading(true);
     try {
       const url = await getExportUrl(jobId);
-      window.open(url, "_blank");
+      await fetchArtifact(url, `${jobId}_audit_log.csv`);
     } catch (e) {
-      alert("CSV audit log would download here when connected to the backend.");
+      alert(e.message || "CSV audit log is not available for this job.");
     }
     setTimeout(() => setCsvLoading(false), 1000);
   };
@@ -35,7 +34,19 @@ export default function ReportDownload({ jobId, disabled }) {
     <div style={styles.card}>
       <div style={styles.header}>
         <span style={styles.pill}>AUDIT ARTIFACTS</span>
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
+        <span
+          title={jobId || "No job selected"}
+          style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: "10px",
+            color: "var(--muted-faint)",
+            maxWidth: 150,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            display: "block",
+          }}
+        >
           {jobId || "No job selected"}
         </span>
       </div>
@@ -67,7 +78,7 @@ export default function ReportDownload({ jobId, disabled }) {
       </div>
 
       <div style={styles.note}>
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--muted-faint)" }}>
           ✦ Reports include FX trace, fee trace, match score, confidence, and explanation
         </span>
       </div>
@@ -77,10 +88,13 @@ export default function ReportDownload({ jobId, disabled }) {
 
 const styles = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
     borderRadius: "12px",
     padding: "20px",
+    boxShadow: "var(--shadow)",
+    minWidth: 0,
+    overflow: "hidden",
   },
   header: {
     display: "flex",
@@ -93,7 +107,7 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.1em",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
   },
   buttons: {
     display: "flex",
@@ -103,6 +117,7 @@ const styles = {
   btn: {
     flex: 1,
     minWidth: "160px",
+    minHeight: "74px",
     display: "flex",
     alignItems: "center",
     gap: "12px",
@@ -129,13 +144,13 @@ const styles = {
     fontFamily: "'Syne', sans-serif",
     fontSize: "13px",
     fontWeight: 600,
-    color: "#e8e8e8",
+    color: "var(--text)",
     marginBottom: "2px",
   },
   btnSub: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "10px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
   },
   note: {
     marginTop: "14px",

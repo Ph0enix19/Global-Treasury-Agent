@@ -36,18 +36,18 @@ export default function ReviewQueue({ cases = [], activeId, onSelect }) {
               onClick={() => onSelect && onSelect(c.job_id)}
               style={{
                 ...styles.item,
-                background: activeId === c.job_id ? "rgba(245,166,35,0.08)" : "rgba(255,255,255,0.02)",
-                border: activeId === c.job_id ? "1px solid rgba(245,166,35,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                background: activeId === c.job_id ? "rgba(245,166,35,0.08)" : "var(--panel-soft)",
+                border: activeId === c.job_id ? "1px solid rgba(245,166,35,0.3)" : "1px solid var(--border-soft)",
                 cursor: "pointer",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "13px", fontWeight: 600, color: "#e8e8e8" }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "13px", fontWeight: 600, color: "var(--text)", minWidth: 0, overflowWrap: "anywhere" }}>
                   {c.invoice?.invoice_number || c.job_id}
                 </span>
                 <ConfidenceBadge status={c.status} confidence={c.confidence} />
               </div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "rgba(255,255,255,0.4)", lineHeight: "1.4" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "var(--muted)", lineHeight: "1.4" }}>
                 {c.explanation?.slice(0, 100)}…
               </div>
               <div style={{ marginTop: "8px", display: "flex", gap: "12px" }}>
@@ -64,10 +64,12 @@ export default function ReviewQueue({ cases = [], activeId, onSelect }) {
 
 const styles = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
     borderRadius: "12px",
     padding: "20px",
+    boxShadow: "var(--shadow)",
+    minWidth: 0,
   },
   header: {
     display: "flex",
@@ -80,7 +82,7 @@ const styles = {
     fontSize: "10px",
     fontWeight: 600,
     letterSpacing: "0.1em",
-    color: "rgba(255,255,255,0.4)",
+    color: "var(--muted)",
   },
   empty: {
     textAlign: "center",
@@ -99,6 +101,6 @@ const styles = {
   meta: {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "11px",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--muted-soft)",
   },
 };

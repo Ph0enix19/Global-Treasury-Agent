@@ -3,6 +3,7 @@
 import base64
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar, Union
 
@@ -14,11 +15,30 @@ from app.models.schemas import InvoiceData, PaymentProofData
 
 DEMO_DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "demo"
 T = TypeVar("T", InvoiceData, PaymentProofData)
+JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.IGNORECASE | re.DOTALL)
 
 
 def _load_json(filename: str) -> Dict[str, Any]:
     with (DEMO_DATA_DIR / filename).open("r", encoding="utf-8") as fixture:
         return json.load(fixture)
+
+
+def _parse_provider_json(content: str) -> Dict[str, Any]:
+    """Parse provider JSON even when a model wraps it in a Markdown fence."""
+
+    candidate = content.strip()
+    fenced = JSON_FENCE_RE.search(candidate)
+    if fenced:
+        candidate = fenced.group(1).strip()
+
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        start = candidate.find("{")
+        end = candidate.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        return json.loads(candidate[start : end + 1])
 
 
 class MorpheusExtractor:
@@ -27,8 +47,8 @@ class MorpheusExtractor:
     def __init__(self) -> None:
         self.api_key = os.getenv("MORPHEUS_API_KEY", "")
         self.base_url = (os.getenv("MORPHEUS_BASE_URL") or "https://api.mor.org/api/v1").rstrip("/")
-        self.model = os.getenv("MORPHEUS_MODEL") or "Gemma-4-31b"
-        self.fast_model = os.getenv("MORPHEUS_FAST_MODEL") or "qwen35-9b"
+        self.model = os.getenv("MORPHEUS_MODEL") or "gemma-4-31b"
+        self.fast_model = os.getenv("MORPHEUS_FAST_MODEL") or "gemma-4-26b-a4b"
         self.fallback_mode = os.getenv("DEMO_MODE", "true").lower() != "false" or not self.api_key
 
     def _fallback_invoice(self, warning: Optional[str] = None) -> InvoiceData:
@@ -97,7 +117,7 @@ class MorpheusExtractor:
         )
         response.raise_for_status()
         content = response.json()["choices"][0]["message"]["content"]
-        payload = json.loads(content)
+        payload = _parse_provider_json(content)
         return schema(**payload)
 
     def extract_invoice(

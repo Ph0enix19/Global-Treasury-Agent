@@ -108,6 +108,38 @@ Final touch-up verification on May 26, 2026:
   reconcile, PDF report, and CSV export.
 - `backend/.env` was not printed or modified.
 
+Live Morpheus/upload UI verification on May 26, 2026:
+- Root cause fixed for live upload failures: Morpheus returned valid JSON wrapped in a
+  Markdown code fence, while the backend expected raw JSON. The extractor now accepts
+  fenced JSON and preserves the same typed `InvoiceData`/`PaymentProofData` contract.
+- Default Morpheus model IDs were aligned with current Morpheus model naming:
+  `gemma-4-31b` primary and `gemma-4-26b-a4b` fallback. Environment variables can still
+  override both.
+- Direct Morpheus extraction was verified against
+  `data/demo/live_fx_upload_test/invoice_INV-LIVE-2026-0526.png` and
+  `data/demo/live_fx_upload_test/payment_proof_INV-LIVE-2026-0526.png` in live mode.
+  The extracted invoice/payment reference was `INV-LIVE-2026-0526`, amount `USD 250.00`,
+  with zero extraction warnings.
+- Full multipart `/api/upload` was verified with the live sample invoice, payment proof,
+  and `bank_statement_live_fx.csv`. It returned `200`, `status=matched`,
+  `confidence=1.0`, `best_match.row_id=live_row_002`, `fx_trace.source=frankfurter_live`,
+  `fx_trace.rate=3.955`, `fx_trace.fallback_used=false`, and
+  `fee_trace.expected_credit=968.92`.
+- Named `/api/demo` scenarios now force deterministic fixture FX values even when the
+  backend process is running in `DEMO_MODE=false`, so presentation cases stay matched,
+  needs-review, and unmatched while real uploads still use live FX.
+- Stored-job `/api/reconcile`, `/api/report/{job_id}`, and `/api/export/{job_id}` were
+  verified for the successful live upload job.
+- Frontend upload behavior was tightened: real upload/reconcile failures no longer
+  produce mock successful results, upload/reconcile timeouts are long enough for vision
+  extraction, audit artifact downloads surface backend errors, long file names are
+  constrained inside the upload panel, and dark/light mode is available in the header.
+- Verification commands passed:
+  `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .tmp\pytest_pre_pr2`
+  returned `25 passed`, and `npm run build` completed successfully.
+- `backend/.env` was not printed, modified, or committed; only key presence/length was
+  checked during diagnostics.
+
 Immediate branch work:
 
 | Member | In Progress Next | Expected Handoff |

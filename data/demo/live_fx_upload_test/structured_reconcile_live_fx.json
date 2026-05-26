@@ -1,0 +1,36 @@
+{
+  "job_id": "live_fx_structured_001",
+  "invoice": {
+    "invoice_number": "INV-LIVE-2026-0526",
+    "payer": "Meridian Cloud Pte Ltd",
+    "payee": "Northstar Design LLC",
+    "amount": 250.0,
+    "currency": "USD",
+    "date": "2026-05-26",
+    "due_date": "2026-06-05",
+    "extraction_confidence": 1.0,
+    "warnings": []
+  },
+  "payment": {
+    "sender": "Meridian Cloud Pte Ltd",
+    "receiver": "Northstar Design LLC",
+    "amount_sent": 250.0,
+    "currency_sent": "USD",
+    "date": "2026-05-26",
+    "reference": "INV-LIVE-2026-0526",
+    "method": "International Wire Transfer",
+    "extraction_confidence": 1.0,
+    "warnings": []
+  },
+  "bank_rows": [
+    {
+      "row_id": "live_row_002",
+      "date": "2026-05-26",
+      "description": "Incoming wire INV-LIVE-2026-0526 Meridian Cloud",
+      "credit_amount": 968.92,
+      "debit_amount": null,
+      "currency": "MYR"
+    }
+  ],
+  "fee_rule": "incoming_wire"
+}

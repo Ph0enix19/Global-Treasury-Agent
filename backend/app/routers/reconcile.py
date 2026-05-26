@@ -87,6 +87,7 @@ def run_reconciliation(
     request: Optional[ReconcileRequest] = None,
     job_id: Optional[str] = None,
     allow_emergency_fallback: bool = False,
+    use_live_fx: Optional[bool] = None,
 ) -> ReconciliationResult:
     """Execute the deterministic MVP pipeline using caller data or demo fixtures."""
 
@@ -117,6 +118,7 @@ def run_reconciliation(
             bank_rows[0].currency if bank_rows else "MYR",
             transaction_date,
             amount,
+            use_live=use_live_fx,
         )
         fee_trace = apply_bank_fees(
             fx_trace.converted_amount, fx_trace.target_currency, payload.fee_rule

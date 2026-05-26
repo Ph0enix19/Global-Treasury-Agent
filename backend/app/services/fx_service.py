@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -51,6 +51,7 @@ def fetch_fx_rate(
     target_currency: str,
     transaction_date: str,
     amount: float,
+    use_live: Optional[bool] = None,
 ) -> FXTrace:
     """Use live dated FX outside demo mode, with a traceable local fallback."""
 
@@ -62,8 +63,12 @@ def fetch_fx_rate(
     fallback_used = False
 
     if base != target:
-        demo_mode = os.getenv("DEMO_MODE", "true").lower() != "false"
-        if not demo_mode:
+        live_mode = (
+            os.getenv("DEMO_MODE", "true").lower() == "false"
+            if use_live is None
+            else use_live
+        )
+        if live_mode:
             try:
                 rate = _live_rate(base, target, rate_date)
                 source = "frankfurter_live"

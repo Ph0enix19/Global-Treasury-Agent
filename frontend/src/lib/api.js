@@ -1,20 +1,35 @@
 // src/lib/api.js
-// API wrapper — tries real backend first, falls back to mock data gracefully.
+// API wrapper. Demo cases can fall back to mock data; real uploads must not.
 
 import { DEMO_CASES } from "./demoData";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const TIMEOUT_MS = 8000;
+const DEFAULT_TIMEOUT_MS = 15000;
+const UPLOAD_TIMEOUT_MS = 120000;
+const RECONCILE_TIMEOUT_MS = 120000;
+const ARTIFACT_TIMEOUT_MS = 30000;
 
-async function fetchWithTimeout(url, options = {}) {
+async function errorFromResponse(res, fallback) {
+  try {
+    const payload = await res.json();
+    return payload.detail || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS, label = "Request") {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
     return res;
   } catch (err) {
     clearTimeout(id);
+    if (err?.name === "AbortError") {
+      throw new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
+    }
     throw err;
   }
 }
@@ -49,37 +64,46 @@ export async function getDemoCase(caseName = "matched") {
 
 // POST /api/upload — upload invoice, payment proof, bank statement
 export async function uploadFiles({ invoice, paymentProof, bankStatement }) {
-  try {
-    const form = new FormData();
-    if (invoice) form.append("invoice", invoice);
-    if (paymentProof) form.append("payment_proof", paymentProof);
-    if (bankStatement) form.append("bank_statement", bankStatement);
+  if (!invoice || !paymentProof || !bankStatement) {
+    throw new Error("Upload requires an invoice, payment proof, and bank statement.");
+  }
 
-    const res = await fetchWithTimeout(`${BASE_URL}/api/upload`, {
+  const form = new FormData();
+  form.append("invoice", invoice);
+  form.append("payment_proof", paymentProof);
+  form.append("bank_statement", bankStatement);
+
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/upload`,
+    {
       method: "POST",
       body: form,
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fall through to mock
+    },
+    UPLOAD_TIMEOUT_MS,
+    "Document upload"
+  );
+  if (!res.ok) {
+    throw new Error(await errorFromResponse(res, "Upload failed."));
   }
-  return { job_id: "mock_" + Date.now(), source: "mock" };
+  return await res.json();
 }
 
 // POST /api/reconcile — trigger full reconciliation pipeline
 export async function reconcile(jobId) {
-  try {
-    const res = await fetchWithTimeout(`${BASE_URL}/api/reconcile`, {
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/reconcile`,
+    {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ job_id: jobId }),
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fall through
+    },
+    RECONCILE_TIMEOUT_MS,
+    "Reconciliation"
+  );
+  if (!res.ok) {
+    throw new Error(await errorFromResponse(res, "Reconciliation failed."));
   }
-  await new Promise((r) => setTimeout(r, 2000));
-  return { ...DEMO_CASES[0], job_id: jobId, source: "mock" };
+  return await res.json();
 }
 
 // GET /api/results/{job_id}
@@ -102,4 +126,23 @@ export async function getReportUrl(jobId) {
 // GET /api/export/{job_id}
 export async function getExportUrl(jobId) {
   return `${BASE_URL}/api/export/${jobId}`;
+}
+
+export async function fetchArtifact(url, filename) {
+  const res = await fetchWithTimeout(url, {}, ARTIFACT_TIMEOUT_MS, "Audit artifact download");
+  if (!res.ok) {
+    throw new Error(await errorFromResponse(res, "Audit artifact is not available for this job."));
+  }
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.target = "_blank";
+  if (filename) {
+    link.download = filename;
+  }
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
