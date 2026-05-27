@@ -15,6 +15,14 @@ pack, PDF report, and CSV audit log.
 
 This repository satisfies the preliminary submission documentation requirements:
 
+Access directly at 
+
+- Frontend URL: `https://global-treasury-agent.vercel.app/`
+- Backend URL: `https://global-treasury-agent.onrender.com/`
+- API docs: `https://global-treasury-agent.onrender.com/docs`
+
+
+
 | Requirement | Where |
 |---|---|
 | System requirements and dependencies | [System Requirements](#system-requirements), [Install Dependencies](#install-dependencies) |
@@ -33,12 +41,6 @@ Recommended hosted deployment split:
 | Dashboard | Vercel | React/Vite static frontend | Set `VITE_API_URL` to the Render backend URL. |
 | API | Render | FastAPI web service | Run from `backend/` with `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. |
 | Local fallback demo | Docker or local terminals | Frontend + backend | Works without provider keys or internet when `DEMO_MODE=true`. |
-
-Use these submission placeholders until final URLs are assigned:
-
-- Frontend URL: `https://global-treasury-agent.vercel.app/`
-- Backend URL: `https://global-treasury-agent.onrender.com/`
-- API docs: `https://global-treasury-agent.onrender.com/docs`
 
 ## System Requirements
 
