@@ -240,8 +240,10 @@ inside the discrepancy panel, while PDF and CSV artifacts remain available.
 
 ## Agent Workflow Diagram
 
-The improved framework diagram is available at
-[docs/screenshots/global_treasury_agent_framework.svg](docs/screenshots/global_treasury_agent_framework.svg).
+<img width="1999" height="1135" alt="image" src="https://github.com/user-attachments/assets/ef4d4a6a-b938-4197-87d6-fad726c5e8c5" />
+
+
+
 It names the actual frontend components, FastAPI routers, backend service
 modules, data contracts, generated artifacts, and AI-versus-deterministic trust
 boundary.
