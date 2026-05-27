@@ -1,0 +1,18 @@
+{
+  "scenario": "unmatched_upload_demo",
+  "invoice_number": "INV-2026-0412",
+  "input_amount": 100.0,
+  "input_currency": "USD",
+  "target_currency": "MYR",
+  "rate_date": "2026-05-20",
+  "fallback_fx_rate": 4.33,
+  "converted_amount": 433.0,
+  "fee_rule": "incoming_wire",
+  "percentage_fee": 6.5,
+  "flat_fee": 5.0,
+  "total_fee": 11.5,
+  "expected_credit": 421.5,
+  "bank_statement_contains_matching_reference": false,
+  "expected_status": "unmatched",
+  "note": "In DEMO_MODE=true, uploads use deterministic fallback extraction for the invoice/payment fields and the uploaded bank statement drives the unmatched outcome."
+}

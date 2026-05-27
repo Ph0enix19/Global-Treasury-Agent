@@ -32,6 +32,7 @@ RESULT_FIELDS = {
     "fee_trace",
     "score_breakdown",
     "explanation",
+    "action_pack",
     "warnings",
 }
 client = TestClient(app)
@@ -337,6 +338,28 @@ def test_demo_cases_remain_deterministic_in_live_mode(monkeypatch) -> None:
     payload = response.json()
     assert payload["status"] == "matched"
     assert payload["fx_trace"]["source"] == "local_fallback_fx_rates"
+    assert payload["action_pack"] is None
+
+
+@pytest.mark.parametrize(
+    ("case_name", "category"),
+    [
+        ("needs_review", "amount_variance_after_fx_and_fees"),
+        ("unmatched", "no_credible_bank_match"),
+    ],
+)
+def test_discrepancy_cases_include_structured_action_pack(case_name: str, category: str) -> None:
+    response = client.get("/api/demo", params={"case": case_name})
+
+    assert response.status_code == 200
+    payload = response.json()
+    action_pack = payload["action_pack"]
+    assert action_pack["category"] == category
+    assert action_pack["recommended_next_action"]
+    assert action_pack["missing_evidence_checklist"]
+    assert "Subject: Finance review required" in action_pack["mock_notification_message"]
+    assert "deterministic match scores" in action_pack["audit_safe_explanation"]
+    assert any(item.startswith("expected_credit=") for item in action_pack["evidence_basis"])
 
 
 @pytest.mark.parametrize(

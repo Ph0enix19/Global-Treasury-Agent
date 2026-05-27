@@ -1,214 +1,83 @@
-# Treasury AI Reconciliation Agent
+# Treasurer.ai
 
-An offline-capable cross-border reconciliation agent built for **AI Marathon 2026**,
-Track 3: **Global Treasury Agent**. It turns invoice data, payment proof data, and
-local bank statement rows into a traceable reconciliation result and exportable artifacts.
+AI-powered cross-border reconciliation for SME finance teams, built for **AI
+Marathon 2026**, Track 3: **Treasurer.ai**.
 
-## Project Overview
+Treasurer.ai turns invoices, payment proofs, and local bank statements
+into a traceable reconciliation result, discrepancy explanation, agentic action
+pack, PDF report, and CSV audit log.
 
-Small and medium businesses receive cross-border payments in a different currency from
-the invoice currency. A USD invoice may appear as a MYR bank credit after an exchange
-rate and incoming-wire fees. This MVP demonstrates a reliable workflow for identifying
-the best bank match, exposing every money calculation, and producing an audit artifact.
+> Core trust rule: AI extracts and explains. Deterministic Python code calculates
+> and validates all FX conversion, bank fees, match scores, statuses, and report
+> values.
 
-The design follows one trust rule:
+## Submission Readiness
 
-> AI extracts and explains; deterministic code calculates and validates all money logic.
+This repository satisfies the preliminary submission documentation requirements:
 
-## Problem Statement
+| Requirement | Where |
+|---|---|
+| System requirements and dependencies | [System Requirements](#system-requirements), [Install Dependencies](#install-dependencies) |
+| Step-by-step local run instructions | [Local Quick Start](#local-quick-start) |
+| Working prototype endpoints | [API Reference](#api-reference) |
+| Agent framework diagram | [Agent Workflow Diagram](#agent-workflow-diagram) |
+| Source code explanation | [Code Explanation](#code-explanation) |
+| Demo flow and expected output | [Demo Walkthrough](#demo-walkthrough) |
 
-Manual reconciliation requires finance teams to read payment proofs, verify invoice
-references, find dated FX rates, account for fees, compare bank credits, and document
-discrepancies. The process is slow and vulnerable to transcription errors, especially
-for small teams without treasury tooling.
+## Hosted Platforms
 
-## Solution Architecture
+Recommended hosted deployment split:
 
-The application implements this path:
-
-1. The dashboard triggers a demo reconciliation or uploaded-document flow.
-2. A Morpheus-compatible extractor returns typed invoice and payment fields, using
-   committed JSON fixtures when a live provider is unavailable.
-3. Deterministic Python code applies dated FX rates with local fallback and a named
-   bank fee rule.
-4. The matcher scores bank rows using date, payment reference, and amount proximity.
-5. A Chutes-compatible explanation wrapper produces a concise business explanation
-   from calculated facts only.
-6. The backend generates a PDF reconciliation report and CSV audit log.
-
-![Agent architecture](docs/architecture_diagram.png)
-
-## Tech Stack
-
-| Layer | Technology | MVP Purpose |
-|---|---|---|
-| Backend | FastAPI, Pydantic, Uvicorn | Modular typed API and shared response contract |
-| Frontend | React, Vite | Single-page demo dashboard and API integration |
-| Extraction | Morpheus-compatible vision wrapper | Live invoice/payment extraction with safe demo fallback |
-| Explanation | Chutes wrapper placeholder | Deterministic offline-friendly explanations |
-| Matching | Python, RapidFuzz fallback support | Explainable scoring and decisions |
-| FX and fees | Python, Frankfurter v2 + local JSON | Live dated rates with traceable offline fallback |
-| Bank imports | pandas, openpyxl | Normalize CSV/XLSX exports into typed statement rows |
-| Artifacts | ReportLab, CSV | PDF reconciliation report and audit export |
-
-## Team Structure
-
-| Role | Member | Branch | Primary Ownership |
+| Surface | Platform | Service Type | Notes |
 |---|---|---|---|
-| Role 1 | Hemdan | `backend/extraction` | FastAPI orchestration, Morpheus/Chutes wrappers, schema approval |
-| Role 2 | Tawila | `backend/matching` | FX, fees, matcher, demo cases, PDF/CSV artifacts, tests |
-| Role 3 | Youssef | `frontend/dashboard` | Dashboard, case selector, upload-ready UI, API calls |
-| Role 4 | Shafey | `demo/docs` | README/deck polish, screenshots, demo script, QA |
+| Dashboard | Vercel | React/Vite static frontend | Set `VITE_API_URL` to the Render backend URL. |
+| API | Render | FastAPI web service | Run from `backend/` with `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. |
+| Local fallback demo | Docker or local terminals | Frontend + backend | Works without provider keys or internet when `DEMO_MODE=true`. |
 
-See [docs/context.md](docs/context.md) for branch ownership, checkpoints, and the
-locked API contract.
+Use these submission placeholders until final URLs are assigned:
 
-## Current Baseline
+- Frontend URL: `https://<vercel-project>.vercel.app`
+- Backend URL: `https://<render-service>.onrender.com`
+- API docs: `https://<render-service>.onrender.com/docs`
 
-The shared `main` baseline already includes:
+## System Requirements
 
-- FastAPI health, demo, reconciliation, PDF report, and CSV audit endpoints.
-- Multipart upload orchestration for invoice, payment proof, and bank statement files.
-- Deterministic USD/MYR FX conversion, fee calculation, and transaction scoring.
-- Local extraction, FX, and complete-result fallback fixtures for offline demo mode.
-- Named `matched`, `needs_review`, and `unmatched` demo cases with pytest coverage.
-- A React/Vite dashboard with named scenarios, upload flow, artifact downloads, and
-  dark/light mode.
-- A committed architecture diagram and local run instructions.
+- Python 3.9 or later.
+- Node.js 18 or later and npm.
+- Optional: Docker Desktop for one-command local startup.
 
-Current Role 1/2 integration: CSV/XLSX bank-export parsing, live dated FX lookup with
-safe local fallback, multipart upload orchestration, Morpheus vision extraction, PDF
-reports, and CSV audit exports are wired into the shared API contract. The frontend
-upload flow posts files to `/api/upload`, receives a stored `job_id`, and can call
-`/api/reconcile` with that `job_id` to retrieve the same result.
+Backend dependencies are listed in [backend/requirements.txt](backend/requirements.txt).
+Frontend dependencies are listed in [frontend/package.json](frontend/package.json).
 
-## Branch Workflow
+## Install Dependencies
 
-`main` is the shared integration branch. Pull this coordination baseline before creating
-your assigned branch:
+PowerShell on Windows:
 
-```bash
-git checkout main
-git pull origin main
-git checkout -b backend/extraction
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+cd ..\frontend
+npm install
 ```
 
-Use only your branch command:
-
-```bash
-# Tawila
-git checkout -b backend/matching main
-
-# Youssef
-git checkout -b frontend/dashboard main
-
-# Shafey
-git checkout -b demo/docs main
-```
-
-Commit in small working units and open pull requests into `main`. Hemdan reviews and
-merges integration or contract-sensitive work after endpoint smoke checks pass. Before
-updating a pull request:
-
-```bash
-git checkout main
-git pull origin main
-git checkout <your-branch>
-git merge main
-```
-
-Merge order for the remaining submission path: Role 2 real-data parsing and FX
-fallback, Role 3 case switcher, Role 1 upload/provider orchestration only when stable,
-then Role 4 final screenshots and documentation polish.
-
-## Folder Structure
-
-```text
-treasury_hackathon/
-|-- backend/
-|   |-- app/
-|   |   |-- main.py
-|   |   |-- models/schemas.py
-|   |   |-- routers/{health,demo,reconcile,report}.py
-|   |   |-- services/
-|   |   `-- utils/
-|   |-- tests/
-|   |-- requirements.txt
-|   `-- .env.example
-|-- frontend/
-|   |-- src/{components,lib}/
-|   |-- src/App.jsx
-|   `-- package.json
-|-- data/
-|   |-- demo/
-|   `-- outputs/{reports,exports}/
-|-- docs/
-|   |-- architecture_diagram.png
-|   `-- context.md
-|-- .gitignore
-`-- docker-compose.yml
-```
-
-## Setup Instructions
-
-Requirements:
-
-- Python 3.9 or later
-- Node.js 18 or later and npm
-- Optional: Docker Desktop for one-command service startup
-
-On macOS, if `npm` is not available:
-
-```bash
-brew install node
-node --version
-npm --version
-```
-
-Backend setup:
+macOS/Linux:
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-```
 
-The default `DEMO_MODE=true` makes provider keys optional and keeps all results local.
-For live FX integration testing, set `DEMO_MODE=false`; if the provider cannot be
-reached, the response FX trace records use of the local dated fallback:
-
-```bash
-DEMO_MODE=false
-MORPHEUS_API_KEY=
-MORPHEUS_BASE_URL=
-MORPHEUS_MODEL=
-MORPHEUS_FAST_MODEL=
-CHUTES_API_KEY=
-CHUTES_BASE_URL=
-CHUTES_MODEL=
-CHUTES_REASONING_MODEL=
-FX_API_URL=https://api.frankfurter.dev/v2
-FX_API_TIMEOUT_SECONDS=3
-```
-
-Recommended Morpheus defaults for live document upload:
-
-```bash
-MORPHEUS_BASE_URL=https://api.mor.org/api/v1
-MORPHEUS_MODEL=gemma-4-31b
-MORPHEUS_FAST_MODEL=gemma-4-26b-a4b
-```
-
-Frontend setup:
-
-```bash
-cd frontend
+cd ../frontend
 npm install
 ```
 
-## Backend Run Commands
+## Local Quick Start
+
+Terminal 1, backend:
 
 ```bash
 cd backend
@@ -216,48 +85,303 @@ source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 ```
 
-Open API documentation at `http://localhost:8000/docs`.
+On Windows PowerShell, activate with:
 
-Backend verification:
-
-```bash
+```powershell
 cd backend
-source .venv/bin/activate
-pytest
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --port 8000
 ```
 
-## Frontend Run Commands
+Open backend API docs:
 
-In a second terminal:
+```text
+http://localhost:8000/docs
+```
+
+Terminal 2, frontend:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open `http://localhost:5173`. Set `VITE_API_URL` only if the backend is hosted
-somewhere other than `http://localhost:8000`.
+Open the dashboard:
 
-Docker alternative:
+```text
+http://localhost:5173
+```
+
+If the backend is not on `http://localhost:8000`, set:
+
+```bash
+VITE_API_URL=http://localhost:8000
+```
+
+## Docker Quick Start
 
 ```bash
 docker compose up
 ```
 
-## API Endpoints
+Default local service URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`
+
+## Environment Configuration
+
+The default `DEMO_MODE=true` keeps the application stable without API keys or
+network access.
+
+```bash
+DEMO_MODE=true
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+FX_API_URL=https://api.frankfurter.dev/v2
+FX_API_TIMEOUT_SECONDS=3
+```
+
+Optional live provider configuration:
+
+```bash
+DEMO_MODE=false
+MORPHEUS_API_KEY=
+MORPHEUS_BASE_URL=https://api.mor.org/api/v1
+MORPHEUS_MODEL=gemma-4-31b
+MORPHEUS_FAST_MODEL=gemma-4-26b-a4b
+
+CHUTES_API_KEY=
+CHUTES_BASE_URL=https://llm.chutes.ai/v1
+CHUTES_MODEL=Qwen/Qwen3-32B-TEE
+CHUTES_REASONING_MODEL=zai-org/GLM-5.1-TEE
+```
+
+Hosted deployment variables:
+
+| Service | Variable | Value |
+|---|---|---|
+| Vercel frontend | `VITE_API_URL` | Render backend URL |
+| Render backend | `DEMO_MODE` | `true` for judged fallback demo, `false` for live provider test |
+| Render backend | `CORS_ORIGINS` | Vercel frontend URL |
+| Render backend | `MORPHEUS_*`, `CHUTES_*` | Optional live provider settings |
+
+## Demo Walkthrough
+
+1. Open the dashboard and choose the **Matched** scenario.
+2. The system extracts or loads invoice `INV-2026-0412` for `USD 100.00`.
+3. Stored dated FX rate `USD/MYR 4.3300` converts the invoice to `MYR 433.00`.
+4. The incoming-wire fee rule applies `1.5% + MYR 5.00`, totaling `MYR 11.50`.
+5. Expected bank credit is `MYR 421.50`.
+6. Bank row `row_003` credits `MYR 421.50`, producing a matched result.
+7. Switch to **Needs Review** to show a `MYR 418.00` credit discrepancy and a
+   structured finance action pack.
+8. Switch to **Unmatched** to show that the system refuses to invent a match and
+   produces a missing-evidence checklist plus mock finance notification.
+9. Download the generated PDF reconciliation report and CSV audit log.
+
+Live upload sample, when `DEMO_MODE=false` and Morpheus/Frankfurter are
+configured:
+
+```bash
+curl -X POST http://localhost:8000/api/upload \
+  -F "invoice=@data/demo/live_fx_upload_test/invoice_INV-LIVE-2026-0526.png" \
+  -F "payment_proof=@data/demo/live_fx_upload_test/payment_proof_INV-LIVE-2026-0526.png" \
+  -F "bank_statement=@data/demo/live_fx_upload_test/bank_statement_live_fx.csv"
+```
+
+Expected live sample highlights:
+
+- `status`: `matched`
+- `invoice.invoice_number`: `INV-LIVE-2026-0526`
+- `fx_trace.source`: `frankfurter_live`
+- `fx_trace.rate`: `3.955`
+- `fee_trace.expected_credit`: `968.92`
+- `best_match.row_id`: `live_row_002`
+
+Unmatched upload sample for judges, available in
+[`data/demo/live_fx_upload_test_unmatched`](data/demo/live_fx_upload_test_unmatched):
+
+```bash
+curl -X POST http://localhost:8000/api/upload \
+  -F "invoice=@data/demo/live_fx_upload_test_unmatched/invoice_INV-2026-0412.png" \
+  -F "payment_proof=@data/demo/live_fx_upload_test_unmatched/payment_receipt_INV-2026-0412.png" \
+  -F "bank_statement=@data/demo/live_fx_upload_test_unmatched/bank_statement_unmatched_live_fx.csv"
+```
+
+You can also upload those same three files through the dashboard while the app is
+running. In the default `DEMO_MODE=true`, the invoice/payment extraction uses
+the deterministic fallback values for `INV-2026-0412`, and the uploaded bank
+statement is parsed normally. That statement intentionally omits a matching
+`MYR 421.50` credit, so the expected result is:
+
+- `status`: `unmatched`
+- `invoice.invoice_number`: `INV-2026-0412`
+- `fx_trace.rate`: `4.33`
+- `fee_trace.expected_credit`: `421.50`
+- `best_match`: unrelated low-confidence bank row
+
+## Agentic Discrepancy Workflow
+
+When a result is `needs_review` or `unmatched`, the backend attaches an
+`action_pack` that turns the failed reconciliation into a structured workflow:
+
+- discrepancy category
+- likely reason framed as a hypothesis, not a production claim
+- recommended finance-team next action
+- missing evidence checklist
+- mock notification message
+- audit-safe explanation tied to calculated FX, fee, confidence, and score facts
+
+Matched results return `action_pack: null`. The frontend renders the action pack
+inside the discrepancy panel, while PDF and CSV artifacts remain available.
+
+## Agent Workflow Diagram
+
+The improved framework diagram is available at
+[docs/screenshots/global_treasury_agent_framework.svg](docs/screenshots/global_treasury_agent_framework.svg).
+It names the actual frontend components, FastAPI routers, backend service
+modules, data contracts, generated artifacts, and AI-versus-deterministic trust
+boundary.
+
+```mermaid
+flowchart LR
+    User[Finance user] --> Vercel[React/Vite dashboard on Vercel]
+    Vercel --> Render[FastAPI backend on Render]
+
+    Render --> Upload["POST /api/upload"]
+    Render --> Demo["GET /api/demo"]
+    Render --> Reconcile["POST /api/reconcile"]
+
+    Upload --> Morpheus[Morpheus-compatible extraction<br/>gemma-4-31b primary<br/>gemma-4-26b-a4b fallback]
+    Upload --> BankParser[CSV/XLSX bank parser]
+
+    Morpheus --> Normalize[Normalize dates, currencies, references]
+    BankParser --> Normalize
+    Demo --> Normalize
+    Reconcile --> Normalize
+
+    Normalize --> FX[FX service<br/>Frankfurter live or local fallback]
+    FX --> Fees[Fee engine<br/>incoming wire 1.5% + MYR 5]
+    Fees --> Matcher[Deterministic matcher<br/>date + reference + amount score]
+    Matcher --> Chutes[Chutes-compatible explanation<br/>Qwen/Qwen3-32B-TEE<br/>GLM-5.1 reasoning model]
+    Matcher --> Discrepancy[Discrepancy workflow<br/>category, next action, evidence checklist]
+    Matcher --> Artifacts[PDF report and CSV audit log]
+    Chutes --> Result[ReconciliationResult]
+    Discrepancy --> Result
+    Artifacts --> Result
+    Result --> Vercel
+```
+
+## Trust Boundary Diagram
+
+```mermaid
+flowchart TB
+    subgraph AI["AI boundary"]
+        A1[Morpheus-compatible vision extractor]
+        A2[Chutes-compatible business explanation]
+    end
+
+    subgraph Code["Deterministic Python boundary"]
+        C1[Validate required fields]
+        C2[Fetch or fallback dated FX rate]
+        C3[Apply bank fee rule]
+        C4[Score date, reference, and amount proximity]
+        C5[Decide matched, needs_review, or unmatched]
+        C6[Build discrepancy action pack from calculated facts]
+        C7[Generate PDF and CSV artifacts]
+    end
+
+    A1 --> C1
+    C5 --> A2
+    C5 --> C6
+    C6 --> C7
+
+    Guardrail[No LLM calculates money, confidence, status, or report values]
+    Guardrail --> Code
+```
+
+## API Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Vercel Frontend
+    participant B as Render FastAPI
+    participant M as Morpheus
+    participant X as FX Service
+    participant R as Report/CSV
+
+    U->>F: Upload invoice, payment proof, bank statement
+    F->>B: POST /api/upload
+    B->>M: Extract visible invoice/payment fields
+    B->>B: Parse bank CSV/XLSX
+    B->>B: Normalize and validate inputs
+    B->>X: Fetch dated FX or local fallback
+    B->>B: Apply fee rule and match bank row
+    B->>R: Generate PDF report and CSV audit log
+    B-->>F: ReconciliationResult with job_id
+    U->>F: Download artifacts
+    F->>B: GET /api/report/{job_id} and /api/export/{job_id}
+```
+
+## Optional Diagram Prompts For GLM / Z.ai
+
+Use these if you want image-based diagrams for the pitch deck. Keep the labels
+faithful to the Mermaid diagrams above.
+
+Prompt 1, architecture diagram:
+
+```text
+Create a clean finance-operations architecture diagram for an AI Marathon 2026
+project named Treasurer.ai. Show this flow: User -> Vercel React/Vite
+Dashboard -> Render FastAPI Backend -> Upload/Demo/Reconcile API routes ->
+Morpheus-compatible extraction using gemma-4-31b primary and gemma-4-26b-a4b
+fallback -> deterministic Python normalization -> Frankfurter FX service with
+local fallback -> deterministic fee engine -> deterministic matcher -> Chutes
+explanation boundary using Qwen/Qwen3-32B-TEE and zai-org/GLM-5.1-TEE -> PDF
+report and CSV audit log -> result returned to dashboard. Visually separate AI
+steps from deterministic code steps. Use green for deterministic finance logic,
+purple for AI extraction/explanation, and blue for hosted infrastructure. Avoid
+generic AI brain graphics. Make it readable on one 16:9 slide.
+```
+
+Prompt 2, trust boundary diagram:
+
+```text
+Create a 16:9 slide diagram titled "AI where it helps. Code where it counts."
+for a treasury reconciliation product. Left side: AI boundary with Morpheus
+document extraction and Chutes explanation. Right side: deterministic Python
+boundary with field validation, dated FX lookup, bank fee calculation, match
+scoring, status decision, PDF/CSV artifact generation. Add a bottom guardrail:
+"No LLM calculates money, confidence, status, or report values." Use a
+professional audit-ready finance dashboard style with restrained colors.
+```
+
+Prompt 3, demo calculation diagram:
+
+```text
+Design a 16:9 calculation trace slide for invoice INV-2026-0412. Show USD
+100.00 multiplied by USD/MYR 4.3300 equals MYR 433.00. Then show incoming wire
+fee equals 1.5% plus MYR 5.00, total MYR 11.50. Then show expected bank credit
+MYR 421.50 and actual bank credit MYR 421.50 with matched status. Use a
+ledger/audit-trace visual style, not a marketing hero page. Highlight that all
+money math is deterministic code.
+```
+
+## API Reference
 
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/api/health` | Backend status and active mode |
-| GET | `/api/demo` | Run the offline matched golden-path reconciliation |
-| GET | `/api/demo?case=matched\|needs_review\|unmatched` | Run a named deterministic demo outcome |
-| POST | `/api/upload` | Upload invoice, payment proof, and CSV/XLSX bank statement files |
-| POST | `/api/reconcile` | Reconcile optional structured inputs or default fixtures |
-| GET | `/api/report/{job_id}` | Download the generated PDF report |
-| GET | `/api/export/{job_id}` | Download the generated CSV audit log |
+| GET | `/api/demo` | Offline matched golden-path reconciliation |
+| GET | `/api/demo?case=matched\|needs_review\|unmatched` | Deterministic scenario selection |
+| POST | `/api/upload` | Upload invoice, payment proof, and CSV/XLSX bank statement |
+| POST | `/api/reconcile` | Reconcile structured inputs or a stored upload `job_id` |
+| GET | `/api/report/{job_id}` | Download generated PDF report |
+| GET | `/api/export/{job_id}` | Download generated CSV audit log |
 
-`GET /api/demo`, `POST /api/upload`, and `POST /api/reconcile` return
-`ReconciliationResult`:
+Shared response shape:
 
 ```json
 {
@@ -271,30 +395,40 @@ docker compose up
   "fee_trace": {},
   "score_breakdown": {},
   "explanation": "",
+  "action_pack": null,
   "warnings": []
 }
 ```
 
-The `ReconciliationResult` shape is frozen for parallel development. Hemdan approves
-any contract change before another branch depends on it.
+For `needs_review` and `unmatched` results, `action_pack` contains a
+deterministic next-step package:
 
-Named demo calls:
-
-```bash
-curl http://localhost:8000/api/demo?case=matched
-curl http://localhost:8000/api/demo?case=needs_review
-curl http://localhost:8000/api/demo?case=unmatched
+```json
+{
+  "category": "amount_variance_after_fx_and_fees",
+  "likely_reason": "",
+  "recommended_next_action": "",
+  "missing_evidence_checklist": [],
+  "mock_notification_message": "",
+  "audit_safe_explanation": "",
+  "evidence_basis": []
+}
 ```
 
-Structured POST example:
+The action pack is built only from extracted fields, FX trace, fee trace, match
+scores, and selected bank-row facts. It does not calculate money with an LLM or
+claim unobserved bank charges as facts.
+
+Smoke-test commands:
 
 ```bash
-curl -X POST http://localhost:8000/api/reconcile \
-  -H "Content-Type: application/json" \
-  -d '{}'
+curl http://localhost:8000/api/health
+curl "http://localhost:8000/api/demo?case=matched"
+curl "http://localhost:8000/api/demo?case=needs_review"
+curl "http://localhost:8000/api/demo?case=unmatched"
 ```
 
-Multipart upload example in offline demo mode:
+Multipart upload in demo mode:
 
 ```bash
 curl -X POST http://localhost:8000/api/upload \
@@ -303,128 +437,162 @@ curl -X POST http://localhost:8000/api/upload \
   -F "bank_statement=@data/demo/sample_bank_statement.csv"
 ```
 
-Then post the returned `job_id` back to `/api/reconcile`:
+Then reconcile a stored upload result:
 
 ```bash
 curl -X POST http://localhost:8000/api/reconcile \
   -H "Content-Type: application/json" \
-  -d '{"job_id":"upload_job_id_here"}'
+  -d "{\"job_id\":\"upload_job_id_here\"}"
 ```
 
-Live Morpheus + FX sample upload:
+## Code Explanation
+
+Backend entrypoint:
+
+- [backend/app/main.py](backend/app/main.py) creates the FastAPI app, configures
+  CORS, loads environment variables, and mounts the API routers.
+
+Shared contracts:
+
+- [backend/app/models/schemas.py](backend/app/models/schemas.py) defines
+  `InvoiceData`, `PaymentProofData`, `BankStatementRow`, `FXTrace`, `FeeTrace`,
+  `MatchResult`, `DiscrepancyActionPack`, `ReconcileRequest`, and
+  `ReconciliationResult`.
+
+Routes:
+
+- [backend/app/routers/health.py](backend/app/routers/health.py) exposes service
+  readiness.
+- [backend/app/routers/demo.py](backend/app/routers/demo.py) exposes deterministic
+  `matched`, `needs_review`, and `unmatched` cases.
+- [backend/app/routers/upload.py](backend/app/routers/upload.py) saves uploaded
+  documents, extracts invoice/payment fields, parses bank rows, and submits a
+  typed reconciliation request.
+- [backend/app/routers/reconcile.py](backend/app/routers/reconcile.py) executes
+  the shared pipeline and stores job results for report/export download.
+- [backend/app/routers/report.py](backend/app/routers/report.py) serves generated
+  PDF reports and CSV audit logs.
+
+Services:
+
+- [backend/app/services/morpheus_extractor.py](backend/app/services/morpheus_extractor.py)
+  wraps Morpheus-compatible document extraction and accepts fenced JSON returned
+  by providers.
+- [backend/app/services/bank_statement_parser.py](backend/app/services/bank_statement_parser.py)
+  normalizes CSV/XLSX bank exports into `BankStatementRow` values.
+- [backend/app/services/fx_service.py](backend/app/services/fx_service.py) fetches
+  dated Frankfurter rates in live mode and uses local JSON fallback in demo mode.
+- [backend/app/services/fee_engine.py](backend/app/services/fee_engine.py) applies
+  deterministic fee policies such as `incoming_wire`.
+- [backend/app/services/matcher.py](backend/app/services/matcher.py) scores bank
+  candidates with date, reference, and amount proximity.
+- [backend/app/services/chutes_agent.py](backend/app/services/chutes_agent.py)
+  produces explanations only from already-calculated facts.
+- [backend/app/services/discrepancy_workflow.py](backend/app/services/discrepancy_workflow.py)
+  builds review/unmatched action packs from calculated facts and match scores.
+- [backend/app/services/report_generator.py](backend/app/services/report_generator.py)
+  creates PDF reconciliation reports.
+- [backend/app/services/audit_exporter.py](backend/app/services/audit_exporter.py)
+  creates CSV audit logs.
+
+Frontend:
+
+- [frontend/src/App.jsx](frontend/src/App.jsx) renders the main dashboard,
+  scenario selector, upload flow, timeline, result panels, and theme toggle.
+- [frontend/src/lib/api.js](frontend/src/lib/api.js) centralizes calls to the
+  FastAPI backend.
+- [frontend/src/components](frontend/src/components) contains the reusable UI
+  cards for uploads, timeline, extracted fields, FX/fee traces, match details,
+  discrepancy handling, and artifact downloads.
+
+## Project Structure
+
+```text
+Treasurer.ai/
+|-- backend/
+|   |-- app/
+|   |   |-- main.py
+|   |   |-- models/schemas.py
+|   |   |-- routers/
+|   |   |-- services/
+|   |   `-- utils/
+|   |-- tests/
+|   `-- requirements.txt
+|-- frontend/
+|   |-- src/components/
+|   |-- src/lib/
+|   |-- src/App.jsx
+|   `-- package.json
+|-- data/
+|   |-- demo/
+|   `-- outputs/
+|-- docker-compose.yml
+`-- README.md
+```
+
+## Testing And Verification
+
+Backend tests:
 
 ```bash
-curl -X POST http://localhost:8000/api/upload \
-  -F "invoice=@data/demo/live_fx_upload_test/invoice_INV-LIVE-2026-0526.png" \
-  -F "payment_proof=@data/demo/live_fx_upload_test/payment_proof_INV-LIVE-2026-0526.png" \
-  -F "bank_statement=@data/demo/live_fx_upload_test/bank_statement_live_fx.csv"
+cd backend
+source .venv/bin/activate
+pytest
 ```
 
-Expected live sample result when `DEMO_MODE=false`, Morpheus is configured, and
-Frankfurter is reachable:
+Frontend build:
 
-- `status`: `matched`
-- `confidence`: `1.0`
-- `invoice.invoice_number`: `INV-LIVE-2026-0526`
-- `fx_trace.source`: `frankfurter_live`
-- `fx_trace.rate`: `3.955`
-- `fx_trace.fallback_used`: `false`
-- `fee_trace.expected_credit`: `968.92`
-- `best_match.row_id`: `live_row_002`
+```bash
+cd frontend
+npm run build
+```
 
-## Postman Smoke Tests
+Postman smoke tests:
 
-Import [docs/postman/treasury-ai-reconciliation-agent.postman_collection.json](docs/postman/treasury-ai-reconciliation-agent.postman_collection.json)
-into Postman and run it against `http://localhost:8000` with `DEMO_MODE=true`.
+- Optional local Postman collections can be kept under ignored `docs/` material.
+- Run smoke requests against `http://localhost:8000` with `DEMO_MODE=true`.
 
-The upload request uses these repo-local demo files:
+## Fallback And Safety Strategy
 
-- `data/demo/sample_invoice.pdf`
-- `data/demo/sample_payment_proof.pdf`
-- `data/demo/sample_bank_statement.csv`
-
-Screenshot placeholder: add the Postman collection runner result screenshot at
-`docs/screenshots/postman-smoke-test.png` before submission.
-
-## Demo Flow
-
-1. Start backend and frontend, then click **Run Demo Mode**.
-2. The fallback extraction fixtures produce invoice `INV-2026-0412` for `USD 100.00`.
-3. Stored FX rate `USD/MYR 4.3300` converts the invoice to `MYR 433.00`.
-4. The incoming-wire rule applies `1.5% + MYR 5.00`, yielding `MYR 421.50`.
-5. Row `row_003` in the bank statement credits `MYR 421.50`, producing a match.
-6. Download the PDF report and audit CSV directly from the result panel.
-7. Use `?case=needs_review` and `?case=unmatched` for exception-handling scenes.
-
-For the live upload GUI flow, open `http://localhost:5173`, upload the three files in
-`data/demo/live_fx_upload_test/`, and click **Run Reconciliation**. The document upload
-cards truncate long file names, the theme toggle switches dark/light mode, and artifact
-buttons download the stored job report/export.
-
-Named demo scenarios remain deterministic even when the backend is running with
-`DEMO_MODE=false`; live FX is used for real uploaded/supplied financial inputs, while
-`/api/demo` keeps the fixture FX values needed for repeatable presentation outcomes.
-
-## Fallback Strategy
-
-The demo does not rely on an external network or an API key:
+The demo does not require external network access:
 
 - `fallback_extracted_invoice.json` replaces unavailable invoice extraction.
 - `fallback_extracted_payment.json` replaces unavailable payment proof extraction.
 - `fallback_fx_rates.json` replaces unavailable live dated FX lookup.
-- `demo_cases.json` supplies deterministic matched, needs-review, and unmatched scenarios.
-- `demo_results.json` is an emergency complete response if the pipeline fails.
-- PDF generation has a basic built-in output path if ReportLab is unavailable.
+- `demo_cases.json` supplies deterministic matched, needs-review, and unmatched
+  scenarios.
+- `demo_results.json` is an emergency complete response if a demo-only pipeline
+  service is unavailable.
 
-In live mode, real uploaded documents do not silently fall back to fake extraction. If
-Morpheus cannot safely extract invoice/payment fields, `/api/upload` returns a clear
-422 instead of producing a fake successful match.
+For explicitly uploaded real financial inputs, the backend does not fabricate a
+successful match. In live mode, if Morpheus extraction cannot safely produce
+typed invoice/payment fields, `/api/upload` returns a clear `422` response.
 
-## Role 2 Real-Data Handoff
+## Known Limitations
 
-Role 2 provides `parse_bank_statement(path)`, which reads `.csv` or `.xlsx` bank
-exports and returns normalized `BankStatementRow` objects. Supported common column
-names include `transaction_date`/`value_date`, `description`/`narrative`,
-`credit_amount`/`amount_received`, and `currency`/`currency_code`.
+- Demo scenarios are synthetic treasury test transactions, created for safe
+  public judging.
+- Batch reconciliation and persistent database storage are future work.
+- Accounting integrations such as QuickBooks or Xero are planned extensions, not
+  current production features.
+- Chutes live calls are represented through a compatible explanation boundary;
+  demo mode uses deterministic explanation text.
+- Bank statement uploads support CSV/XLSX formats with common column names.
 
-Hemdan can call this parser after an uploaded bank file is saved, then submit its rows
-through `ReconcileRequest.bank_rows`; the public `ReconciliationResult` response shape
-does not change. `fetch_fx_rate()` requests a live dated Frankfurter rate only when
-`DEMO_MODE=false`, falls back to stored dated rates on provider failure, and raises an
-error if no trustworthy fallback pair exists. Supplied financial rows return a clear
-validation error rather than being replaced silently with a prebuilt demo outcome.
+## Team
+
+| Role | Member | Primary Ownership |
+|---|---|---|
+| Role 1 | Hemdan | Backend orchestration, Morpheus/Chutes wrappers, schemas |
+| Role 2 | Tawila | FX, fees, matching, bank parser, reports, tests |
+| Role 3 | Youssef | React dashboard, scenario selector, upload UI |
+| Role 4 | Shafey | Demo script, deck, screenshots, QA |
 
 ## Future Improvements
 
-- Multi-invoice batch reconciliation and persistent job storage.
-- Chutes API-backed explanation behind the existing deterministic explanation boundary.
-- Configurable treasury rate/fee policies, batch reconciliation, and human approval workflow.
-- Accounting integrations and secure document storage.
-
-## Integration Checklist
-
-- Confirm `GET /api/health` returns `status: ok`.
-- Confirm `GET /api/demo` and each named `case` return the expected deterministic status.
-- Confirm `POST /api/reconcile` returns the same field structure as demo.
-- Confirm PDF and CSV links download generated artifacts.
-- Confirm live upload with `data/demo/live_fx_upload_test/` returns a matched result
-  only when Morpheus extraction succeeds.
-- Confirm `pytest` passes before merging backend changes.
-- Record the final demo in `DEMO_MODE=true` after the above checks pass.
-
-## Start Here Today
-
-| Member | First Task | Handoff Required |
-|---|---|---|
-| Hemdan | Keep schemas/routes stable and review backend PRs | Confirm API smoke checks after merges |
-| Tawila | Deliver bank export parser and live FX fallback tests | Provide typed rows and traceable FX behavior |
-| Youssef | Use the merged named-case endpoints | Add case switch UI and retain downloads |
-| Shafey | Prepare deck/script against the verified baseline | Capture matched and needs-review flow after integration |
-
-Immediate sequence:
-
-1. Pull `main` and create only your assigned branch.
-2. Tawila delivers the real bank-export parser and live-FX fallback pull request.
-3. Youssef connects the already available named cases in the UI.
-4. Hemdan connects uploads/provider work without moving money calculations into AI.
-5. Shafey captures the stable offline walkthrough and final materials.
+- Multi-invoice batch reconciliation.
+- Persistent job storage and history.
+- Configurable treasury fee policies per bank/region.
+- Human approval workflow with role-based access.
+- Accounting system integrations.
+- Secure document storage and audit retention.

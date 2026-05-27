@@ -31,6 +31,9 @@ def export_audit_log(result: ReconciliationResult, output_dir: Optional[Path] = 
                 "bank_row_id",
                 "actual_credit",
                 "explanation",
+                "action_pack_category",
+                "recommended_next_action",
+                "missing_evidence_checklist",
             ]
         )
         writer.writerow(
@@ -47,6 +50,11 @@ def export_audit_log(result: ReconciliationResult, output_dir: Optional[Path] = 
                 row.row_id if row else "",
                 row.credit_amount if row else "",
                 result.explanation,
+                result.action_pack.category if result.action_pack else "",
+                result.action_pack.recommended_next_action if result.action_pack else "",
+                " | ".join(result.action_pack.missing_evidence_checklist)
+                if result.action_pack
+                else "",
             ]
         )
     return path

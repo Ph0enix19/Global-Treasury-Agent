@@ -18,8 +18,8 @@ give me a plan unless a blocker makes implementation impossible.
 
 PROJECT
 -------
-Project name: Treasury AI Reconciliation Agent
-Hackathon: AI Marathon 2026, Global Treasury Agent track
+Project name: Treasurer.ai
+Hackathon: AI Marathon 2026, Treasurer.ai track
 Team:
 - Role 1: Hemdan, branch `backend/extraction`
 - Role 2: Tawila, branch `backend/matching` / current follow-up branch

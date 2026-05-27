@@ -12,7 +12,7 @@ from app.routers import demo, health, reconcile, report, upload
 load_dotenv()
 
 app = FastAPI(
-    title="Treasury AI Reconciliation Agent",
+    title="Treasurer.ai",
     version="0.1.0",
     description="Explainable cross-border reconciliation with deterministic money logic.",
 )
@@ -36,7 +36,7 @@ app.include_router(report.router)
 @app.get("/")
 def root() -> dict:
     return {
-        "name": "Treasury AI Reconciliation Agent",
+        "name": "Treasurer.ai",
         "status": "ready",
         "demo_endpoint": "/api/demo",
         "docs": "/docs",

@@ -1,4 +1,4 @@
-# Treasury AI Reconciliation Agent: Team Handoff And Demo Rescue Plan
+# Treasurer.ai: Team Handoff And Demo Rescue Plan
 
 **Status date:** May 26, 2026 (MYT)
 **Team:** Hemdan, Tawila, Youssef, Shafey
@@ -214,7 +214,7 @@ Must deliver next:
 
 ## Stable Interface For Parallel Work
 
-Do not change the fields in `ReconciliationResult` during the rescue sprint:
+Current stable `ReconciliationResult` fields after the discrepancy-workflow update:
 
 ```json
 {
@@ -228,9 +228,13 @@ Do not change the fields in `ReconciliationResult` during the rescue sprint:
   "fee_trace": {},
   "score_breakdown": {},
   "explanation": "",
+  "action_pack": null,
   "warnings": []
 }
 ```
+
+`action_pack` remains null for clean matches and is populated for review or
+unmatched cases with next-action evidence built from deterministic facts.
 
 Youssef can safely build against that result shape. Hemdan owns approval for any later
 schema change.

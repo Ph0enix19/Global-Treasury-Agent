@@ -1,12 +1,20 @@
 """PDF report artifact generation with a dependency-free emergency fallback."""
 
 from pathlib import Path
+from textwrap import wrap
 from typing import List, Optional
 
 from app.models.schemas import ReconciliationResult
 
 
 REPORT_DIR = Path(__file__).resolve().parents[3] / "data" / "outputs" / "reports"
+
+
+def _append_wrapped(lines: List[str], label: str, text: str, width: int = 94) -> None:
+    wrapped = wrap(text, width=width) or [""]
+    lines.append(f"{label}: {wrapped[0]}")
+    for continuation in wrapped[1:]:
+        lines.append(f"  {continuation}")
 
 
 def _report_lines(result: ReconciliationResult) -> List[str]:
@@ -18,8 +26,8 @@ def _report_lines(result: ReconciliationResult) -> List[str]:
         if bank_row
         else "No matching bank credit"
     )
-    return [
-        "Treasury AI Reconciliation Agent - Reconciliation Report",
+    lines = [
+        "Treasurer.ai - Reconciliation Report",
         f"Job ID: {result.job_id}",
         f"Status: {result.status.upper()}",
         f"Confidence: {result.confidence:.1%}",
@@ -35,6 +43,24 @@ def _report_lines(result: ReconciliationResult) -> List[str]:
         f"Explanation: {result.explanation}",
         "Calculation rule: AI extracts and explains; deterministic code calculates and validates.",
     ]
+    if result.action_pack:
+        lines.append(f"Discrepancy Category: {result.action_pack.category}")
+        _append_wrapped(
+            lines,
+            "Recommended Next Action",
+            result.action_pack.recommended_next_action,
+        )
+        _append_wrapped(
+            lines,
+            "Missing Evidence Checklist",
+            "; ".join(result.action_pack.missing_evidence_checklist),
+        )
+        _append_wrapped(
+            lines,
+            "Audit-Safe Explanation",
+            result.action_pack.audit_safe_explanation,
+        )
+    return lines
 
 
 def _write_with_reportlab(path: Path, lines: List[str]) -> None:

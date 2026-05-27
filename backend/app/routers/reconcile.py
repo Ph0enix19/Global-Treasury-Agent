@@ -17,6 +17,7 @@ from app.models.schemas import (
 from app.services.audit_exporter import export_audit_log
 from app.services.bank_statement_parser import parse_bank_statement
 from app.services.chutes_agent import generate_explanation
+from app.services.discrepancy_workflow import build_discrepancy_action_pack
 from app.services.fee_engine import apply_bank_fees
 from app.services.fx_service import fetch_fx_rate
 from app.services.matcher import match_transactions
@@ -124,6 +125,9 @@ def run_reconciliation(
             fx_trace.converted_amount, fx_trace.target_currency, payload.fee_rule
         )
         match = match_transactions(invoice, payment, bank_rows, fee_trace)
+        action_pack = build_discrepancy_action_pack(
+            invoice, payment, match, fx_trace, fee_trace
+        )
         result = ReconciliationResult(
             job_id=resolved_job_id,
             status=match.status,
@@ -142,6 +146,7 @@ def run_reconciliation(
                 "amount_weight": 0.40,
             },
             explanation=generate_explanation(invoice, match),
+            action_pack=action_pack,
             warnings=collect_input_warnings(invoice, payment),
         )
     except Exception as exc:

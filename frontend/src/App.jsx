@@ -76,6 +76,7 @@ export default function App() {
   const [uploadError, setUploadError]           = useState("");
 
   const [files, setFiles]                   = useState({ invoice: null, paymentProof: null, bankStatement: null });
+  const [uploadResetKey, setUploadResetKey] = useState(0);
   const [phase, setPhase]                   = useState("idle");
   const [completedSteps, setCompletedSteps] = useState([]);
   const [currentStep, setCurrentStep]       = useState(null);
@@ -130,6 +131,22 @@ export default function App() {
     } finally {
       setScenarioLoading(false);
     }
+  };
+
+  const handleCloseAndReset = () => {
+    if (isRunning) return;
+    setMode("idle");
+    setSelectedScenario(null);
+    setScenarioLoading(false);
+    setScenarioError("");
+    setUploadError("");
+    setFiles({ invoice: null, paymentProof: null, bankStatement: null });
+    setUploadResetKey((key) => key + 1);
+    setPhase("idle");
+    setCompletedSteps([]);
+    setCurrentStep(null);
+    setResult(null);
+    setJobId(null);
   };
 
   // ── Upload + reconcile flow ───────────────────────────────────────────────
@@ -204,7 +221,7 @@ export default function App() {
         <div style={styles.logo}>
           <span style={styles.logoMark}>◈</span>
           <div>
-            <div style={styles.logoName}>Global Treasury Agent</div>
+            <div style={styles.logoName}>Treasurer.ai</div>
             <div style={styles.logoSub}>Cross-Border Reconciliation · AI Marathon 2026</div>
           </div>
         </div>
@@ -336,7 +353,7 @@ export default function App() {
 
           {/* LEFT */}
           <div className="app-left-panel" style={styles.leftPanel}>
-            <FileUpload files={files} onChange={setFiles} />
+            <FileUpload key={uploadResetKey} files={files} onChange={setFiles} />
             <div style={{ marginTop: "12px" }}>
               <AgentTimeline
                 isRunning={isRunning}
@@ -358,6 +375,18 @@ export default function App() {
                   <span style={styles.spinner} /> Processing…
                 </span>
               ) : phase === "done" ? "↺ Reconcile Again" : "▶ Run Reconciliation"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCloseAndReset}
+              disabled={isRunning}
+              style={{
+                ...styles.resetBtn,
+                opacity: isRunning ? 0.45 : 1,
+                cursor: isRunning ? "not-allowed" : "pointer",
+              }}
+            >
+              × Close & Reset
             </button>
             {uploadError && (
               <div style={styles.errorBanner}>
@@ -444,7 +473,7 @@ export default function App() {
       </main>
 
       <footer style={styles.footer}>
-        <span>AI Marathon 2026 · Track 3: Global Treasury Agent</span>
+        <span>AI Marathon 2026 · Track 3: Treasurer.ai</span>
         <span>AI extracts &amp; explains · Deterministic code calculates &amp; validates</span>
         <span>Morpheus · Chutes · Frankfurter FX</span>
       </footer>
@@ -553,6 +582,21 @@ const styles = {
     background: "linear-gradient(135deg, #a78bfa, #7c3aed)", border: "none", color: "#fff",
     fontFamily: "'Syne', sans-serif", fontSize: "14px", fontWeight: 700, letterSpacing: "0.04em",
     transition: "all 0.2s ease", boxShadow: "0 4px 20px rgba(167,139,250,0.25)",
+  },
+  resetBtn: {
+    width: "100%",
+    marginTop: "8px",
+    padding: "12px",
+    borderRadius: "10px",
+    background: "var(--panel)",
+    border: "1px solid var(--border)",
+    color: "var(--muted-strong)",
+    fontFamily: "'Syne', sans-serif",
+    fontSize: "13px",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    transition: "all 0.2s ease",
+    boxShadow: "var(--shadow)",
   },
   spinner: {
     width: 14, height: 14, borderRadius: "50%",

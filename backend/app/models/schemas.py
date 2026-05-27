@@ -72,6 +72,16 @@ class MatchResult(BaseModel):
     amount_score: float
 
 
+class DiscrepancyActionPack(BaseModel):
+    category: str
+    likely_reason: str
+    recommended_next_action: str
+    missing_evidence_checklist: List[str] = Field(default_factory=list)
+    mock_notification_message: str
+    audit_safe_explanation: str
+    evidence_basis: List[str] = Field(default_factory=list)
+
+
 class ReconciliationResult(BaseModel):
     job_id: str
     status: str
@@ -83,6 +93,7 @@ class ReconciliationResult(BaseModel):
     fee_trace: FeeTrace
     score_breakdown: Dict[str, float]
     explanation: str
+    action_pack: Optional[DiscrepancyActionPack] = None
     warnings: List[str] = Field(default_factory=list)
 
 

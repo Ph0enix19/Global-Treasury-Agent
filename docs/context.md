@@ -1,8 +1,8 @@
-# Team Context: Treasury AI Reconciliation Agent
+# Team Context: Treasurer.ai
 
 ## Goal And Guardrail
 
-Build a stable AI Marathon 2026 Global Treasury Agent MVP that reconciles invoice,
+Build a stable AI Marathon 2026 Treasurer.ai MVP that reconciles invoice,
 payment proof, and bank statement data. Morpheus and Chutes are visible integration
 boundaries, but the demo works without keys or internet.
 
@@ -88,7 +88,7 @@ Final touch-up verification on May 26, 2026:
 - Updated README wording for the implemented upload flow, corrected the frontend env
   name to `VITE_API_URL`, documented empty Morpheus/Chutes model env placeholders, and
   added a Postman smoke-test section plus screenshot placeholder.
-- Added `docs/postman/treasury-ai-reconciliation-agent.postman_collection.json` and
+- Added `docs/postman/treasurer-ai.postman_collection.json` and
   demo-mode upload placeholder files under `data/demo/`.
 - Backend tests passed from `backend/.venv` with a repo-local temp directory:
   `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .tmp\pytest_verify2`
@@ -171,9 +171,15 @@ documents only behavior confirmed against demo mode.
   "fee_trace": {},
   "score_breakdown": {},
   "explanation": "",
+  "action_pack": null,
   "warnings": []
 }
 ```
+
+`action_pack` is `null` for matched results. For `needs_review` and `unmatched`
+results, it contains the deterministic discrepancy category, recommended next
+action, missing evidence checklist, mock finance notification, and audit-safe
+explanation built from calculated facts.
 
 Endpoint ownership:
 

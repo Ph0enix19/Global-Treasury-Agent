@@ -1,0 +1,60 @@
+{
+  "job_id": "live_fx_structured_unmatched_001",
+  "invoice": {
+    "invoice_number": "INV-2026-0412",
+    "payer": "Pacific Retail Sdn Bhd",
+    "payee": "Northstar Design LLC",
+    "amount": 100.0,
+    "currency": "USD",
+    "date": "2026-05-20",
+    "due_date": "2026-05-30",
+    "extraction_confidence": 1.0,
+    "warnings": []
+  },
+  "payment": {
+    "sender": "Pacific Retail Sdn Bhd",
+    "receiver": "Northstar Design LLC",
+    "amount_sent": 100.0,
+    "currency_sent": "USD",
+    "date": "2026-05-20",
+    "reference": "INV-2026-0412",
+    "method": "International Wire Transfer",
+    "extraction_confidence": 1.0,
+    "warnings": []
+  },
+  "bank_rows": [
+    {
+      "row_id": "unmatched_row_001",
+      "date": "2026-05-18",
+      "description": "Card settlement marketplace payout",
+      "credit_amount": 314.2,
+      "debit_amount": null,
+      "currency": "MYR"
+    },
+    {
+      "row_id": "unmatched_row_002",
+      "date": "2026-05-22",
+      "description": "Incoming wire unrelated customer ORBIT-4481",
+      "credit_amount": 770.1,
+      "debit_amount": null,
+      "currency": "MYR"
+    },
+    {
+      "row_id": "unmatched_row_003",
+      "date": "2026-05-25",
+      "description": "Supplier refund operations",
+      "credit_amount": 122.0,
+      "debit_amount": null,
+      "currency": "MYR"
+    },
+    {
+      "row_id": "unmatched_row_004",
+      "date": "2026-05-27",
+      "description": "Payroll clearing batch",
+      "credit_amount": 2080.0,
+      "debit_amount": null,
+      "currency": "MYR"
+    }
+  ],
+  "fee_rule": "incoming_wire"
+}

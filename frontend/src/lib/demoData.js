@@ -1,5 +1,5 @@
 // src/lib/demoData.js
-// Pre-built demo dataset for Global Treasury Agent
+// Pre-built demo dataset for Treasurer.ai
 // Used when backend is unavailable or Demo Mode is active
 
 export const DEMO_CASES = [
@@ -62,6 +62,7 @@ export const DEMO_CASES = [
     },
     explanation:
       "Invoice INV-2026-0412 for USD 100.00 has been successfully reconciled: the bank credited MYR 415.20 on 13 Apr 2026, matching the expected MYR 415.18 after applying the 1.5% incoming wire fee to the USD/MYR rate of 4.215.",
+    action_pack: null,
     warnings: [],
     bank_rows: [
       {
@@ -161,6 +162,29 @@ export const DEMO_CASES = [
       "Amount received is MYR 38.31 below expected net after fee",
       "Possible intermediary bank deduction detected",
     ],
+    action_pack: {
+      category: "amount_variance_after_fx_and_fees",
+      likely_reason:
+        "INV-2026-0388 has a plausible reference/date match, but the closest bank credit differs from the deterministic expected credit. A possible extra bank charge, intermediary deduction, or fee-policy variance should be verified.",
+      recommended_next_action:
+        "Ask finance to obtain the bank advice or remittance fee breakdown before posting the receipt.",
+      missing_evidence_checklist: [
+        "Original payment proof with sender, date, amount, currency, and reference visible.",
+        "Bank advice or SWIFT/remittance details showing deducted charges.",
+        "Confirmation of the receiving bank fee rule used for this account.",
+        "Finance approval note before ledger posting.",
+      ],
+      mock_notification_message:
+        "Subject: Finance review required for INV-2026-0388\n\nINV-2026-0388 is marked Needs Review. Expected local credit is MYR 1036.71 after USD/MYR 4.2100 on 2026-04-08 and incoming wire fees. Closest bank row row_007 credited MYR 998.40 on 2026-04-09. Recommended action: ask finance to obtain the bank advice or remittance fee breakdown before posting the receipt.",
+      audit_safe_explanation:
+        "This action pack uses only extracted invoice/payment fields, the FX trace, fee trace, closest bank row, and deterministic match scores. It does not assume unobserved bank charges or fabricate missing credits.",
+      evidence_basis: [
+        "fx_rate=4.2100",
+        "expected_credit=MYR 1036.71",
+        "best_match_row_id=row_007",
+        "confidence=0.6100",
+      ],
+    },
     bank_rows: [
       {
         row_id: "row_005",
@@ -197,6 +221,102 @@ export const DEMO_CASES = [
         currency: "MYR",
         match_score: 0.44,
         is_best: false,
+      },
+    ],
+  },
+  {
+    job_id: "demo_unmatched_001",
+    label: "Case 3 — Unmatched",
+    status: "unmatched",
+    confidence: 0.12,
+    invoice: {
+      invoice_number: "INV-2026-0412",
+      payer: "Pacific Retail Group",
+      payee: "GlobalTech Solutions LLC",
+      amount: 100.0,
+      currency: "USD",
+      date: "2026-05-20",
+      due_date: "2026-05-27",
+      extraction_confidence: 0.97,
+      warnings: [],
+    },
+    payment: {
+      sender: "Pacific Retail Group",
+      receiver: "GlobalTech Solutions LLC",
+      amount_sent: 100.0,
+      currency_sent: "USD",
+      date: "2026-05-20",
+      reference: "INV-2026-0412",
+      method: "International Wire Transfer",
+      extraction_confidence: 0.94,
+      warnings: [],
+    },
+    fx_trace: {
+      base_currency: "USD",
+      target_currency: "MYR",
+      rate: 4.33,
+      rate_date: "2026-05-20",
+      source: "local_fallback_fx_rates",
+      converted_amount: 433.0,
+    },
+    fee_trace: {
+      rule_name: "incoming_wire",
+      currency: "MYR",
+      gross_amount: 433.0,
+      percentage_rate: 0.015,
+      percentage_fee: 6.5,
+      flat_fee: 5.0,
+      total_fee: 11.5,
+      expected_credit: 421.5,
+    },
+    best_match: {
+      row_id: "row_unmatched_001",
+      date: "2026-05-27",
+      description: "Incoming transfer unrelated settlement",
+      credit_amount: 376.25,
+      debit_amount: null,
+      currency: "MYR",
+    },
+    score_breakdown: {
+      date_score: 0.0,
+      reference_score: 0.41,
+      amount_score: 0.0,
+      final_confidence: 0.12,
+    },
+    explanation:
+      "INV-2026-0412 could not be matched to a bank credit with sufficient date, reference, and amount agreement.",
+    action_pack: {
+      category: "no_credible_bank_match",
+      likely_reason:
+        "The closest bank row is weak on both reference and amount agreement, so it is not credible enough for automated reconciliation.",
+      recommended_next_action:
+        "Hold the invoice open and request an updated bank statement or proof that the transfer has settled.",
+      missing_evidence_checklist: [
+        "Original payment proof with sender, date, amount, currency, and reference visible.",
+        "Updated bank statement covering the expected settlement window.",
+        "Finance approval note before ledger posting.",
+      ],
+      mock_notification_message:
+        "Subject: Finance review required for INV-2026-0412\n\nINV-2026-0412 is marked Unmatched. Expected local credit is MYR 421.50 after USD/MYR 4.3300 on 2026-05-20 and incoming_wire fees. Closest bank row row_unmatched_001 credited MYR 376.25 on 2026-05-27, below the minimum match threshold.",
+      audit_safe_explanation:
+        "This action pack uses only extracted invoice/payment fields, the FX trace, fee trace, closest bank row, and deterministic match scores. It does not assume unobserved bank charges or fabricate missing credits.",
+      evidence_basis: [
+        "fx_rate=4.3300",
+        "expected_credit=MYR 421.50",
+        "best_match_row_id=row_unmatched_001",
+        "confidence=0.1200",
+      ],
+    },
+    warnings: [],
+    bank_rows: [
+      {
+        row_id: "row_unmatched_001",
+        date: "2026-05-27",
+        description: "Incoming transfer unrelated settlement",
+        credit_amount: 376.25,
+        currency: "MYR",
+        match_score: 0.12,
+        is_best: true,
       },
     ],
   },

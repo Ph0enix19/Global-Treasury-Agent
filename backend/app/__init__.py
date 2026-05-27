@@ -1,1 +1,1 @@
-"""Treasury AI Reconciliation Agent backend application package."""
+"""Treasurer.ai backend application package."""

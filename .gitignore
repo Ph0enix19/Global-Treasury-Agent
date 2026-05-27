@@ -11,6 +11,7 @@ node_modules/
 dist/
 *.log
 .tmp/
+docs/
 
 data/outputs/reports/*
 !data/outputs/reports/.gitkeep

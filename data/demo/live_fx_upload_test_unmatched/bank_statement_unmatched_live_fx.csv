@@ -1,0 +1,5 @@
+row_id,date,description,credit_amount,debit_amount,currency
+unmatched_row_001,2026-05-18,Card settlement marketplace payout,314.20,,MYR
+unmatched_row_002,2026-05-22,Incoming wire unrelated customer ORBIT-4481,770.10,,MYR
+unmatched_row_003,2026-05-25,Supplier refund operations,122.00,,MYR
+unmatched_row_004,2026-05-27,Payroll clearing batch,2080.00,,MYR
